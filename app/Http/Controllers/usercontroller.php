@@ -318,11 +318,11 @@ else{
     public function showSlider()
     {
 
-$propertyRent=DB::table('property_special')->
-where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->get();
+ $propertyRent=DB::table('property_special')->
+ where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
-$propertyprice=DB::table('property_special')->
-where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->get();
+ $propertyprice=DB::table('property_special')->
+ where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
 
 
