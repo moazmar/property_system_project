@@ -24,8 +24,12 @@ Route::post('rigester',[usercontroller::class,'Rigester']);
 Route::post('login',[usercontroller::class,'login']);
 Route::middleware(['auth:sanctum'])->group(function (){
 Route::post('add_property',[usercontroller::class,'add_property']);
-
-
+Route::post('updateuser',[usercontroller::class,'update']);
+Route::post('logout',[usercontroller::class,'logout']);
 });
-Route::post('uploadeImage',[usercontroller::class,'upload_image']);
 Route::get('slider',[usercontroller::class,'showSlider']);
+Route::get('getproperty/{id}',[usercontroller::class,'getproperty']);
+Route::get('getproperty',[usercontroller::class,'property']);
+Route::get('profile/{id}',[usercontroller::class,'profile']);
+Route::get('public_search',[usercontroller::class,'public_search']);
+

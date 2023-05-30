@@ -8,11 +8,12 @@ use App\Models\state_model;
 use Illuminate\Http\Request;
 
 use App\Models\User;
+use Laravel\Passport\HasApiTokens;
+
 use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Facades\Hash;
-use Laravel\Passport\HasApiTokens;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -39,6 +40,28 @@ class usercontroller extends Controller
 
     }
 
+
+    public function profile ($id){
+        //way 1
+//  $user=DB::select('SELECT * FROM users WHERE id=?',[$id]);
+
+ //way2
+ $user=DB::table('users')->find($id);
+
+return Response()->json(['user'=>$user]);
+
+    }
+
+
+
+    public function update( ){
+$update= User:: find(auth()->user()->id);
+ $update->update(Request()->all());
+
+ return Response()->json(['useredit'=>$update]);
+
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -59,14 +82,14 @@ class usercontroller extends Controller
     if ($data->fails()) {
         return Response()->json(['error' => $data->errors()]);
     }
-    if($request['image']){
-        if($request->hasFile('image')){
+//     if($request['image']){
+//         if($request->hasFile('image')){
         
-        $filenameWithExt=$request->file('image')->getClientOriginalName();
-        $filename=pathinfo($filenameWithExt,PATHINFO_FILENAME);
-        $extention=$request->file('image')->getClientOriginalExtension();
-        $filenameToStore=$filename. '-' . time() . '-' .$extention;
-        $path=$request->file('image')->storeAs('image',$filenameToStore);
+//         $filenameWithExt=$request->file('image')->getClientOriginalName();
+//         $filename=pathinfo($filenameWithExt,PATHINFO_FILENAME);
+//         $extention=$request->file('image')->getClientOriginalExtension();
+//         $filenameToStore=$filename. '-' . time() . '-' .$extention;
+//         $path=$request->file('image')->storeAs('image',$filenameToStore);
              
 
 
@@ -79,40 +102,41 @@ $user=User::create([
 'information_about'=>$request['information_about'],
 'password' => Hash::make($request['password']),
 'phone'=>$request['phone'],
-'image'=>URL::asset('storage'.$path)
+// 'image'=>URL::asset('storage'.$path)
+ 'image'=> $this->upload_image($request)
 
 ]);
 
 $token=$user->createToken('authToken')->plainTextToken;
-return Response()->json(['user'=>$user,'token'=>$token,'path'=>$path]);
+return Response()->json(['user'=>$user,'token'=>$token]);
 
 
     
-    }
+//     }
 
 
 
-    }
+//     }
         
-    $user=User::create([
-        'name'=>$request['name'],
-        'email'=>$request['email'],
-        'password'=>$request['password'],
-        'age'=>$request['age'],
-        'gender'=>$request['gender'],
-        'information_about'=>$request['information_about'],
-'phone'=>$request['phone'],
+//     $user=User::create([
+//         'name'=>$request['name'],
+//         'email'=>$request['email'],
+//         'password'=>$request['password'],
+//         'age'=>$request['age'],
+//         'gender'=>$request['gender'],
+//         'information_about'=>$request['information_about'],
+// 'phone'=>$request['phone'],
 
-        'password' => Hash::make($request['password'])
+//         'password' => Hash::make($request['password'])
         
-        ]);
+//         ]);
         
-        $token=$user->createToken('authToken')->plainTextToken;
-        return Response()->json(['user'=>$user,'token'=>$token]);
+//         $token=$user->createToken('authToken')->plainTextToken;
+//         return Response()->json(['user'=>$user,'token'=>$token]);
 
 
 
-    }
+     }
 
 
 
@@ -163,6 +187,18 @@ $token=$user->createToken('authToken')->plainTextToken;
 return Response()->json(['user'=>$user,'token'=>$token]);
 
     }
+public function logout(){
+
+
+    $token = auth()->user()->tokens;
+
+
+ //   $token->delete();
+ Auth::logout($token);
+ return Response()->json(['massage' => 'logged out successfully  ']);
+
+}
+
 
     /**
      * Display the specified resource.
@@ -302,7 +338,7 @@ else{
         }
 }
        
-     return Response()->json([['location'=>$location],['property'=>$property]]);
+     return Response()->json(['state'=>$state,'location'=>$location,'property'=>$property]);
 
 
 
@@ -352,6 +388,99 @@ return Response()->json(['property rent'=>$propertyRent]);
         
     }
 
+    public function getproperty( $id){
+
+$property=property_special_model::find($id);
+
+if($property){
+$idlocation=$property->location_id;
+
+$location=location_model::find($idlocation);
+$name=$location->address;
+$stateid=$location->state_id;
+$state=state_model::find($stateid);
+$namestate=$state->nameState;
+
+return Response()->json(['locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+}
+else return Response()->json([null]);
+
+
+    }
+    public function property(){
+$property=DB::table('property_special')->inRandomOrder()->get();
+if(!$property->isEmpty()){
+foreach($property as $pro){
+$locationid=$pro->location_id;
+$location=location_model::find($locationid);
+$stateid=$location->state_id;
+$state=state_model::find($stateid);
+
+$h[]=array(
+"property"=>$pro,
+"location"=>$location,
+"state"=>$state
+
+);
+
+}
+return Response()->json($h);
+}
+else return null;
+
+    }
+
+
+    public function public_search(Request $request){
+
+        $name=$request['name'];
+        $users=User::where('name','like','%'. $name.'%')->get();
+       
+        foreach($users as $user){
+
+        $id=$user->id;
+        $nameuser=$user->name;
+        $property=property_special_model::where('users_id','=',$id)->get();
+
+            foreach($property as $pro){
+                $locationId=$pro->location_id;
+                $stateId=location_model::find($locationId)->state_id;
+                $state=state_model::find($stateId)->nameState;
+                $location=location_model::find($locationId)->address;
+            
+                $h[]=array(
+            "name user"=>$nameuser,
+            "location property"=>$location,
+            "state"=>$state
+
+                );
+
+            }
+
+
+        }
+
+
+
+
+
+        
+
+        if(!$property->isEmbty()){
+        return Response()->json(['property'=>$property]);    
+        
+        }
+
+
+    }
+
+
+
+
+
+
+    
+
     /**
      * Show the form for editing the specified resource.
      *
@@ -370,10 +499,7 @@ return Response()->json(['property rent'=>$propertyRent]);
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
-    {
-        //
-    }
+
 
     /**
      * Remove the specified resource from storage.
@@ -393,13 +519,20 @@ return Response()->json(['property rent'=>$propertyRent]);
             $files=$request->file('image');
        
                    foreach($files  as  $image){
-                        $filenameWithExt=$image->getClientOriginalName();
-                     $path=$image->storeAs('image',$filenameWithExt,'public');
-                array_push($images,$path);
+                        $filename=$image->getClientOriginalName();
+                        $filenameExtention=$image->getClientOriginalExtension();
+                        $filenameWithExt= $filename .'-' . time() .'-' . $filenameExtention;
+                        $path=$image->storeAs('image',$filenameWithExt,'public');
+                        $url=URL::asset($path);
+                       
+
+                      array_push($images,$url);
+          
             }
-            return $images;
+             return $images;
         
-        }            
+        }  
+        else return null;          
     }
 
     public function upload_video(Request $request){
