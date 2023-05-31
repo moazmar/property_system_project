@@ -27,7 +27,7 @@ use Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rules\Unique;
 use PhpParser\Node\Stmt\ElseIf_;
-
+use Laravel\Sanctum\PersonalAccessToken;
 class usercontroller extends Controller
 {
     /**
@@ -188,14 +188,21 @@ $token=$user->createToken('authToken')->plainTextToken;
 return Response()->json(['user'=>$user,'token'=>$token]);
 
     }
-public function logout(){
+public function logout(Request $request){
 
 
-    $token = auth()->user()->tokens;
+//     $token = auth()->user()->tokens;
 
 
- //   $token->delete();
- Auth::logout($token);
+//  //   $token->delete();
+//  $token->destroy();
+$accessToken = $request->bearerToken();
+    
+// Get access token from database
+$token = PersonalAccessToken::findToken($accessToken);
+
+// Revoke token
+$token->delete();
  return Response()->json(['massage' => 'logged out successfully  ']);
 
 }
@@ -543,15 +550,7 @@ else return null;
             
 
         }
-        
-
     
-
-
-
-
-
-
         return Response()->json(['result'=>$h]);    
         
         
