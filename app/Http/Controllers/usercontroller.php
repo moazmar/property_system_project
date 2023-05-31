@@ -26,6 +26,7 @@ use Response;
 use Route;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rules\Unique;
+use PhpParser\Node\Stmt\ElseIf_;
 
 class usercontroller extends Controller
 {
@@ -435,44 +436,128 @@ else return null;
 
         $name=$request['name'];
         $users=User::where('name','like','%'. $name.'%')->get();
-       
+       if(!$users->isEmpty()){
         foreach($users as $user){
 
-        $id=$user->id;
-        $nameuser=$user->name;
-        $property=property_special_model::where('users_id','=',$id)->get();
+            $id=$user->id;
+            $nameuser=$user->name;
+            $property=property_special_model::where('users_id','=',$id)->get();
+                if(!$property->isEmpty()){
+    
+                    foreach($property as $pro){
+                        $locationId=$pro->location_id;
+                        $stateId=location_model::find($locationId)->state_id;
+                        $state=state_model::find($stateId)->nameState;
+                        $location=location_model::find($locationId)->address;
+                    
+                        $h[]=array(
+                    "id"=>$id,        
+                    "name user"=>$nameuser,
+                    "image"=>$user->image,
+                    "location property"=>$location,
+                    "state"=>$state,
+                    "hello"
+                   
 
-            foreach($property as $pro){
+        
+                        );
+        
+                    }
+                }
+                else{
+                    $h[]=array("name user"=>$nameuser,
+                    "id"=>$id,
+                    "image"=>$user->image,
+                    "location property"=>null,
+                    "state"=>null,
+                    "welcom"
+                
+                );
+                   
+                }
+
+              
+    
+       }
+
+
+
+        }
+        else{
+            $property1=property_special_model::where('typeofproperty','like','%'. $name.'%')->get();
+
+            if(!$property1->isEmpty()){
+                foreach($property1 as $pro){
+    
                 $locationId=$pro->location_id;
                 $stateId=location_model::find($locationId)->state_id;
                 $state=state_model::find($stateId)->nameState;
                 $location=location_model::find($locationId)->address;
-            
+                $iduser=$pro->users_id;
+                $nameuser=User::find($iduser)->name;
+                    
                 $h[]=array(
-            "name user"=>$nameuser,
-            "location property"=>$location,
-            "state"=>$state
-
+                    "id property"=>$pro->id,        
+                    "name user"=>$nameuser,
+                    "type property"=>$pro->typeofproperty,
+                    "location property"=>$location,
+                    "state"=>$state,
+                    "hhhhh"
+                   
                 );
+                }
+    
+    
+            }
+            else {
+                $property2=property_special_model::where('rent_or_sell','like','%'. $name.'%')->get();
+
+                if(!$property2->isEmpty()){
+                    foreach($property2 as $pro){
+        
+                    $locationId=$pro->location_id;
+                    $stateId=location_model::find($locationId)->state_id;
+                    $state=state_model::find($stateId)->nameState;
+                    $location=location_model::find($locationId)->address;
+                    $iduser=$pro->users_id;
+                    $nameuser=User::find($iduser)->name;
+                        
+                    $h[]=array(
+                        "id property"=>$pro->id,        
+                        "name user"=>$nameuser,
+                        "type property"=>$pro->typeofproperty,
+                        "type offer"=>$pro->rent_or_sell,
+                        "location property"=>$location,
+                        "state"=>$state,
+                        "ddddd"
+                       
+                    );
+                    }
+        
+        
+                }
+                else return Response()->json(['  no  result ']);
+
 
             }
-
+            
 
         }
-
-
-
-
-
         
 
-        if(!$property->isEmbty()){
-        return Response()->json(['property'=>$property]);    
-        
-        }
+    
 
+
+
+
+
+
+        return Response()->json(['result'=>$h]);    
+        
+        
 
     }
+    
 
 
 
@@ -521,7 +606,8 @@ else return null;
                    foreach($files  as  $image){
                         $filename=$image->getClientOriginalName();
                         $filenameExtention=$image->getClientOriginalExtension();
-                        $filenameWithExt= $filename .'-' . time() .'-' . $filenameExtention;
+                        $filename=pathinfo($filename,PATHINFO_FILENAME);
+                        $filenameWithExt= $filename .'-' . time() .'.' . $filenameExtention;
                         $path=$image->storeAs('image',$filenameWithExt,'public');
                         $url=URL::asset($path);
                        

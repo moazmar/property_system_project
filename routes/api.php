@@ -31,5 +31,5 @@ Route::get('slider',[usercontroller::class,'showSlider']);
 Route::get('getproperty/{id}',[usercontroller::class,'getproperty']);
 Route::get('getproperty',[usercontroller::class,'property']);
 Route::get('profile/{id}',[usercontroller::class,'profile']);
-Route::get('public_search',[usercontroller::class,'public_search']);
+Route::post('public_search',[usercontroller::class,'public_search']);
 
