@@ -8,6 +8,8 @@ use App\Models\state_model;
 use Illuminate\Http\Request;
 
 use App\Models\User;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\HasApiTokens;
 
 use GuzzleHttp\Psr7\Response as Psr7Response;
@@ -42,14 +44,14 @@ class usercontroller extends Controller
     }
 
 
-    public function profile ($id){
-        //way 1
-//  $user=DB::select('SELECT * FROM users WHERE id=?',[$id]);
 
- //way2
- $user=DB::table('users')->find($id);
+    public function profile()
+    {
+        $user=Auth::User();
+        $properties=property_special_model::where('id',optional($user)->id)->first();
+        return Response()->json([['user'=>$user],['properties'=>$properties]]);
 
-return Response()->json(['user'=>$user]);
+
 
     }
 
@@ -85,13 +87,13 @@ $update= User:: find(auth()->user()->id);
     }
 //     if($request['image']){
 //         if($request->hasFile('image')){
-        
+
 //         $filenameWithExt=$request->file('image')->getClientOriginalName();
 //         $filename=pathinfo($filenameWithExt,PATHINFO_FILENAME);
 //         $extention=$request->file('image')->getClientOriginalExtension();
 //         $filenameToStore=$filename. '-' . time() . '-' .$extention;
 //         $path=$request->file('image')->storeAs('image',$filenameToStore);
-             
+
 
 
 $user=User::create([
@@ -112,13 +114,13 @@ $token=$user->createToken('authToken')->plainTextToken;
 return Response()->json(['user'=>$user,'token'=>$token]);
 
 
-    
-//     }
-
-
 
 //     }
-        
+
+
+
+//     }
+
 //     $user=User::create([
 //         'name'=>$request['name'],
 //         'email'=>$request['email'],
@@ -129,9 +131,9 @@ return Response()->json(['user'=>$user,'token'=>$token]);
 // 'phone'=>$request['phone'],
 
 //         'password' => Hash::make($request['password'])
-        
+
 //         ]);
-        
+
 //         $token=$user->createToken('authToken')->plainTextToken;
 //         return Response()->json(['user'=>$user,'token'=>$token]);
 
@@ -197,7 +199,7 @@ public function logout(Request $request){
 //  //   $token->delete();
 //  $token->destroy();
 $accessToken = $request->bearerToken();
-    
+
 // Get access token from database
 $token = PersonalAccessToken::findToken($accessToken);
 
@@ -232,7 +234,7 @@ $token->delete();
             'descreption'=>'required',
             'nameState'=>'required',
             'area'=>'required'
-            
+
         ]);
         if($validation->fails()){
 
@@ -322,7 +324,7 @@ else{
             ]);
         }
         if( $request['rent_or_sell']=="sell"){
-    
+
             $property=property_special_model::create([
                 'location_id'=>$location->id,
                 'users_id'=> $request['users_id'],
@@ -341,11 +343,11 @@ else{
 
 
                 ]);
-    
-    
+
+
         }
 }
-       
+
      return Response()->json(['state'=>$state,'location'=>$location,'property'=>$property]);
 
 
@@ -358,7 +360,8 @@ else{
 
 
 
-     
+
+
     public function showSlider()
     {
 
@@ -379,21 +382,21 @@ return Response()->json(['property sell '=>$propertyprice,'property rent'=>$prop
  if(!$propertyprice->isEmpty() && $propertyRent->isEmpty()){
 
  return Response()->json(['property sell '=>$propertyprice]);
-                        
+
  }
-     
+
  if($propertyprice->isEmpty() && !$propertyRent->isEmpty()){
 
 return Response()->json(['property rent'=>$propertyRent]);
-                                                                                           
- } 
+
+ }
 
   if($propertyprice->isEmpty() && $propertyRent->isEmpty()){
 
  return Response()->json('no property to show ');
-                                                                                                                                             
+
   }
-        
+
     }
 
     public function getproperty( $id){
@@ -450,25 +453,25 @@ else return null;
             $nameuser=$user->name;
             $property=property_special_model::where('users_id','=',$id)->get();
                 if(!$property->isEmpty()){
-    
+
                     foreach($property as $pro){
                         $locationId=$pro->location_id;
                         $stateId=location_model::find($locationId)->state_id;
                         $state=state_model::find($stateId)->nameState;
                         $location=location_model::find($locationId)->address;
-                    
+
                         $h[]=array(
-                    "id"=>$id,        
+                    "id"=>$id,
                     "name user"=>$nameuser,
                     "image"=>$user->image,
                     "location property"=>$location,
                     "state"=>$state,
                     "hello"
-                   
 
-        
+
+
                         );
-        
+
                     }
                 }
                 else{
@@ -478,13 +481,13 @@ else return null;
                     "location property"=>null,
                     "state"=>null,
                     "welcom"
-                
+
                 );
-                   
+
                 }
 
-              
-    
+
+
        }
 
 
@@ -495,75 +498,75 @@ else return null;
 
             if(!$property1->isEmpty()){
                 foreach($property1 as $pro){
-    
+
                 $locationId=$pro->location_id;
                 $stateId=location_model::find($locationId)->state_id;
                 $state=state_model::find($stateId)->nameState;
                 $location=location_model::find($locationId)->address;
                 $iduser=$pro->users_id;
                 $nameuser=User::find($iduser)->name;
-                    
+
                 $h[]=array(
-                    "id property"=>$pro->id,        
+                    "id property"=>$pro->id,
                     "name user"=>$nameuser,
                     "type property"=>$pro->typeofproperty,
                     "location property"=>$location,
                     "state"=>$state,
                     "hhhhh"
-                   
+
                 );
                 }
-    
-    
+
+
             }
             else {
                 $property2=property_special_model::where('rent_or_sell','like','%'. $name.'%')->get();
 
                 if(!$property2->isEmpty()){
                     foreach($property2 as $pro){
-        
+
                     $locationId=$pro->location_id;
                     $stateId=location_model::find($locationId)->state_id;
                     $state=state_model::find($stateId)->nameState;
                     $location=location_model::find($locationId)->address;
                     $iduser=$pro->users_id;
                     $nameuser=User::find($iduser)->name;
-                        
+
                     $h[]=array(
-                        "id property"=>$pro->id,        
+                        "id property"=>$pro->id,
                         "name user"=>$nameuser,
                         "type property"=>$pro->typeofproperty,
                         "type offer"=>$pro->rent_or_sell,
                         "location property"=>$location,
                         "state"=>$state,
                         "ddddd"
-                       
+
                     );
                     }
-        
-        
+
+
                 }
                 else return Response()->json(['  no  result ']);
 
 
             }
-            
+
 
         }
-    
-        return Response()->json(['result'=>$h]);    
-        
-        
+
+        return Response()->json(['result'=>$h]);
+
+
 
     }
-    
 
 
 
 
 
 
-    
+
+
 
     /**
      * Show the form for editing the specified resource.
@@ -596,12 +599,12 @@ else return null;
         //
     }
 
-    public function upload_image(Request $request){
+   public function upload_image(Request $request){
         $images=array();
         if($request['image']){
-      
+
             $files=$request->file('image');
-       
+
                    foreach($files  as  $image){
                         $filename=$image->getClientOriginalName();
                         $filenameExtention=$image->getClientOriginalExtension();
@@ -609,16 +612,17 @@ else return null;
                         $filenameWithExt= $filename .'-' . time() .'.' . $filenameExtention;
                         $path=$image->storeAs('image',$filenameWithExt,'public');
                         $url=URL::asset($path);
-                       
+
 
                       array_push($images,$url);
-          
+
             }
              return $images;
-        
-        }  
-        else return null;          
+
+        }
+        else return null;
     }
+
 
     public function upload_video(Request $request){
 
@@ -627,15 +631,15 @@ else return null;
     //         'video' => 'required|file|mimetypes:video/mp4'
 
     //   ]);
-      
+
       $video=$request->file('video');
 
       if ($request['video']){
         $filenameWithExt=$video->getClientOriginalName();
         $path=$video->storeAs('video',$filenameWithExt,'public');
 
-      
-      
+
+
       return $path;
       }
       else return null;
