@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\property_special_model;
+use App\Models\rents_model;
+use App\Models\selles_model;
+
 
 class User extends Authenticatable
 {
@@ -50,8 +54,20 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-        
+
             'image' => 'array'
-        
+
     ];
+    public function properties()
+    {
+        return $this->hasMany(property_special_model::class);
+    }
+    public function rents()
+    {
+        return $this->hasMany(rents_model::class);
+    }
+    public function sells()
+    {
+        return $this->hasMany(selles_model::class);
+    }
 }
