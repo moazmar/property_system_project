@@ -27,7 +27,8 @@ class User extends Authenticatable
         'image',
         'age',
         'gender',
-        'information_about'
+        'information_about',
+        'google_id',
 
 
     ];

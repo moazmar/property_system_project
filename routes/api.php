@@ -33,3 +33,5 @@ Route::get('getproperty',[usercontroller::class,'property']);
 Route::get('profile/{id}',[usercontroller::class,'profile']);
 Route::post('public_search',[usercontroller::class,'public_search']);
 
+Route::get('auth/google',[usercontroller::class,'redirect_google']);
+Route::get('auth/google/callback',[usercontroller::class,'handleCallback']);

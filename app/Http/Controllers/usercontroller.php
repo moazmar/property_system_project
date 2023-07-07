@@ -6,11 +6,9 @@ use App\Models\location_model;
 use App\Models\property_special_model;
 use App\Models\state_model;
 use Illuminate\Http\Request;
-
 use App\Models\User;
 use Laravel\Passport\HasApiTokens;
 
-use GuzzleHttp\Psr7\Response as Psr7Response;
 use Illuminate\Auth\Access\Response as AccessResponse;
 use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +26,8 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rules\Unique;
 use PhpParser\Node\Stmt\ElseIf_;
 use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Socialite\Facades\Socialite;
+
 class usercontroller extends Controller
 {
     /**
@@ -97,12 +97,21 @@ $update= User:: find(auth()->user()->id);
 $user=User::create([
 'name'=>$request['name'],
 'email'=>$request['email'],
-'password'=>$request['password'],
 'age'=>$request['age'],
 'gender'=>$request['gender'],
 'information_about'=>$request['information_about'],
 'password' => Hash::make($request['password']),
 'phone'=>$request['phone'],
+
+
+
+
+
+
+
+
+
+
 // 'image'=>URL::asset('storage'.$path)
  'image'=> $this->upload_image($request)
 
@@ -203,7 +212,7 @@ $token = PersonalAccessToken::findToken($accessToken);
 
 // Revoke token
 $token->delete();
- return Response()->json(['massage' => 'logged out successfully  ']);
+return Response()->json(['massage' => 'logged out successfully  ']);
 
 }
 
@@ -631,13 +640,60 @@ else return null;
       $video=$request->file('video');
 
       if ($request['video']){
-        $filenameWithExt=$video->getClientOriginalName();
+        $filename=$video->getClientOriginalName();
+        $filenameExtention=$video->getClientOriginalExtension();
+        $filename=pathinfo($filename,PATHINFO_FILENAME);
+        $filenameWithExt= $filename .'-' . time() .'.' . $filenameExtention;
         $path=$video->storeAs('video',$filenameWithExt,'public');
+        $url=URL::asset($path);
 
       
       
-      return $path;
+      return $url;
       }
       else return null;
     }
+
+public function redirect_google(){
+
+    return Socialite::driver('google')->redirect();
+
+}
+public function handleCallback(){
+
+try{
+$user=Socialite::driver('google')->user();
+$finduser=User::where('google_id',$user->id)->first();
+
+if($finduser){
+
+Auth::login($finduser);
+return  Response()->json($finduser);
+
+}
+else{
+    $newuser=User::create([
+        'name'=>$user->name,
+        'email'=>$user->email,
+        'google_id'=>$user->google_id,
+        'age'=>$user->age,
+        'gender'=>$user->gender,
+        'information_about'=>$user->information_about,
+        'password' => Hash::make('my-google'),
+        'phone'=>$user->phone
+        
+    ]);
+    Auth::login($newuser);
+    return response()->json($newuser);
+}
+
+
+}
+catch(Exception $e){
+    dd($e->getMessage());
+}
+
+}
+
+
 }

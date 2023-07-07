@@ -127,6 +127,8 @@
                     </div>
                 </div>
             </div>
+            <a href="/auth/google" class="text-sm text-gray-700 dark:text-gray-500 underline"> google Log in</a>
+        
         </div>
     </body>
 </html>
