@@ -7,8 +7,6 @@ use App\Models\property_special_model;
 use App\Models\state_model;
 use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Storage;
 use Laravel\Passport\HasApiTokens;
 
 use Illuminate\Auth\Access\Response as AccessResponse;
@@ -39,38 +37,50 @@ class usercontroller extends Controller
      */
     public function index()
     {
-        return User::all();
+    return User::all();
 
     }
 
 
-    public function profile_me()
-    {
-        $user = Auth::User();
-        $properties = property_special_model::where('id', optional($user)->id)->first();
-        return Response()->json([['user' => $user], ['properties' => $properties]]);
-
-
-    }
-    public function profile_user ($id){
+    public function profile ($id){
         //way 1
 //  $user=DB::select('SELECT * FROM users WHERE id=?',[$id]);
 
-        //way2
-        $user=User::find($id);
+ //way2
+ $user=DB::table('users')->find($id);
+ $user_id=$user->id;
+ $property=property_special_model::where('users_id', '=' , $id)->get();
 
-        return Response()->json(['user'=>$user]);
+if(!$property->isEmpty()){
+    foreach($property as $pro){
+
+        $locationid=$pro->location_id;
+        $location=location_model::find($locationid);
+        $stateid=$location->state_id;
+        $state=state_model::find($stateid);
+
+$h[]=array(
+"property"=>$pro,
+"location"=>$location,
+"state"=>$state
+
+);
+
+    }
+
+}
+
+ return Response()->json(['user'=>$user,'user property'=>$h]);
 
     }
 
 
 
-    public function update()
-    {
-        $update = User:: find(auth()->user()->id);
-        $update->update(Request()->all());
+    public function update( ){
+$update= User:: find(auth()->user()->id);
+ $update->update(Request()->all());
 
-        return Response()->json(['useredit' => $update]);
+ return Response()->json(['useredit'=>$update]);
 
     }
 
@@ -81,31 +91,30 @@ class usercontroller extends Controller
      */
     public function Rigester(Request $request)
     {
-        $data = Validator::make($request->all(), [
-            'name' => 'required',
-            'phone' => 'required|unique:users',
-            'email' => 'required|email|unique:users',
-            'password' => 'required',
-            'age' => 'required',
-            'gender' => 'required',
-            'information_about' => 'required'
+    $data= Validator::make($request->all(),[
+        'name' =>'required',
+        'phone'=>'required|unique:users',
+        'email'=>'required|email|unique:users',
+        'password' =>'required',
+        'age'=>'required',
+        'gender'=>'required',
+        'information_about'=>'required'
 
-        ]);
-        if ($data->fails()) {
-            return Response()->json(['error' => $data->errors()]);
-        }
-
+    ]);
+    if ($data->fails()) {
+        return Response()->json(['error' => $data->errors()]);
+    }
 //     if($request['image']){
 //         if($request->hasFile('image')){
-
+        
 //         $filenameWithExt=$request->file('image')->getClientOriginalName();
 //         $filename=pathinfo($filenameWithExt,PATHINFO_FILENAME);
 //         $extention=$request->file('image')->getClientOriginalExtension();
 //         $filenameToStore=$filename. '-' . time() . '-' .$extention;
 //         $path=$request->file('image')->storeAs('image',$filenameToStore);
+             
 
 
-<<<<<<< HEAD
 $user=User::create([
 'name'=>$request['name'],
 'email'=>$request['email'],
@@ -124,31 +133,22 @@ $user=User::create([
 
 
 
-=======
-        $user = User::create([
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => $request['password'],
-            'age' => $request['age'],
-            'gender' => $request['gender'],
-            'information_about' => $request['information_about'],
-            'password' => Hash::make($request['password']),
-            'phone' => $request['phone'],
->>>>>>> cbea51d77dd93b2ea43f19bb8713da481c2b248d
 // 'image'=>URL::asset('storage'.$path)
-           'image' => $this->upload_image($request)
+ 'image'=> $this->upload_image($request)
 
-        ]);
+]);
 
-        $token = $user->createToken('authToken')->plainTextToken;
-        return Response()->json(['user' => $user, 'token' => $token]);
+$token=$user->createToken('authToken')->plainTextToken;
+return Response()->json(['user'=>$user,'token'=>$token]);
 
 
+    
 //     }
 
 
-//     }
 
+//     }
+        
 //     $user=User::create([
 //         'name'=>$request['name'],
 //         'email'=>$request['email'],
@@ -159,81 +159,66 @@ $user=User::create([
 // 'phone'=>$request['phone'],
 
 //         'password' => Hash::make($request['password'])
-
+        
 //         ]);
-
+        
 //         $token=$user->createToken('authToken')->plainTextToken;
 //         return Response()->json(['user'=>$user,'token'=>$token]);
 
 
-    }
-    public function upload_image(Request $request){
 
-        if($request->hasFile("image")){
-            $file=$request->file("image");
+     }
 
 
-                $filename=time().rand(1,50).'.'.$file->getClientOriginalExtension();
-                $file->move('public/users/',$filename);
-
-                $url=url('public/users/'.$filename);
-
-
-            return $url;
-
-        }
-        else return null;
-    }
 
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function login(Request $request)
     {
-        $validation = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|alphaNum'
+        $validation=Validator::make($request->all(),[
+       'email'=>'required|email',
+       'password'=>'required|alphaNum'
 
 
         ]);
-        if ($validation->fails()) {
+        if($validation->fails()){
 
-            return Response()->json(['error' => $validation->errors()]);
+            return Response()->json(['error'=>$validation->errors()]);
         }
-        $email = $request['email'];
-        $password = $request['password'];
+        $email=$request['email'];
+        $password=$request['password'];
 
-        if (!Auth::attempt($request->only('email', 'password'), true)) {
+if(!Auth::attempt($request->only('email','password'),true)){
 
-            if (!User::where('email', '=', $email)->first()) {
-
-
-                return Response()->json(['message' => 'error  email resend right value', 'token' => null]);
-
-            }
-            if (!User::where('password', '=', $password)->first()) {
-                return Response()->json(['message' => 'error password resend right value', 'token' => null]);
+    if( !User::where('email','=',$email)->first()){
 
 
-            } else
-                return Response()->json(['message' => 'error value resend right value', 'token' => null]);
-
-        }
-
-        $user = User::where('email', $request['email'])->first();
-        $token = $user->createToken('authToken')->plainTextToken;
-
-
-        return Response()->json(['user' => $user, 'token' => $token]);
+    return Response()->json(['message'=>'error  email resend right value','token'=>null]);
 
     }
+    if(!User::where('password','=',$password)->first()){
+        return Response()->json(['message'=>'error password resend right value','token'=>null]);
 
-    public function logout(Request $request)
-    {
+
+    }
+else
+    return Response()->json(['message'=>'error value resend right value','token'=>null]);
+
+}
+
+$user=User::where('email',$request['email'])->first();
+$token=$user->createToken('authToken')->plainTextToken;
+
+
+return Response()->json(['user'=>$user,'token'=>$token]);
+
+    }
+public function logout(Request $request){
 
 
 //     $token = auth()->user()->tokens;
@@ -241,147 +226,379 @@ $user=User::create([
 
 //  //   $token->delete();
 //  $token->destroy();
-        $accessToken = $request->bearerToken();
-
+$accessToken = $request->bearerToken();
+    
 // Get access token from database
-        $token = PersonalAccessToken::findToken($accessToken);
+$token = PersonalAccessToken::findToken($accessToken);
 
 // Revoke token
-<<<<<<< HEAD
 $token->delete();
 return Response()->json(['massage' => 'logged out successfully  ']);
-=======
-        $token->delete();
-        return Response()->json(['massage' => 'logged out successfully  ']);
->>>>>>> cbea51d77dd93b2ea43f19bb8713da481c2b248d
 
-    }
+}
 
 
     /**
      * Display the specified resource.
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
 
 
-    public function public_search(Request $request)
-    {
+     public function add_property(Request $request){
+        $validation=Validator::make($request->all(),[
 
-        $name = $request['name'];
-        $users = User::where('name', 'like', '%' . $name . '%')->get();
-        if (!$users->isEmpty()) {
-            foreach ($users as $user) {
-
-                $id = $user->id;
-                $nameuser = $user->name;
-                $property = property_special_model::where('users_id', '=', $id)->get();
-                if (!$property->isEmpty()) {
-
-                    foreach ($property as $pro) {
-                        $locationId = $pro->location_id;
-                        $stateId = location_model::find($locationId)->state_id;
-                        $state = state_model::find($stateId)->nameState;
-                        $location = location_model::find($locationId)->address;
-
-                        $h[] = array(
-                            "id" => $id,
-                            "name user" => $nameuser,
-                            "image" => $user->image,
-                            "location property" => $location,
-                            "state" => $state,
-                            "hello"
+            // 'location_id'=>'required',
+            'typeofproperty'=>'required',
+            'rent_or_sell'=>'required',
+            //  'users_id'=>'required',
+            'address'=>'required',
+            'numberofRooms'=>'required',
+            // 'image'=>'required',
+            // 'video'=>'required',
+            // 'monthlyRent'=>'required',
+            // 'price'=>'required',
+            'descreption'=>'required',
+            'nameState'=>'required',
+            'area'=>'required'
+            
+        ]);
+        if($validation->fails()){
 
 
-                        );
+    return Response()->json(['error'=>$validation->errors()]);
 
-                    }
-                } else {
-                    $h[] = array("name user" => $nameuser,
-                        "id" => $id,
-                        "image" => $user->image,
-                        "location property" => null,
-                        "state" => null,
-                        "welcom"
+}
+$state=state_model::create([
 
-                    );
-
-                }
+    'nameState'=>$request['nameState']
 
 
-            }
+]);
+$location=location_model::create([
+
+    'address'=>$request['address'],
+    'state_id'=>$state->id
+    ]);
+
+$request['users_id']=auth()->user()->id;
+$avgSell=$request['price']/$request['area'];
+$avgRent=$request['monthlyRent']/$request['area'];
+
+if($request['image'] ||$request['video'] ){
+if( $request['rent_or_sell']=="rent"){
+
+    $property=property_special_model::create([
+        'location_id'=>$location->id,
+        'users_id'=> $request['users_id'],
+        'typeofproperty'=>$request['typeofproperty'],
+        'rent_or_sell'=>$request['rent_or_sell'],
+        'address'=>$request['address'],
+        'numberofRooms'=>$request['numberofRooms'],
+        'descreption'=>$request['descreption'],
+        'nameState'=>$request['nameState'],
+        'area'=>$request['area'],
+        'image'=> $this->upload_image($request),
+        'video'=>$this->upload_video($request),
+        'monthlyRent'=>$request['monthlyRent'],
+        'price'=>null,
+        'rent_square_meter'=>$avgRent
+        ]);
+    }
+    if( $request['rent_or_sell']=="sell"){
+
+        $property=property_special_model::create([
+            'location_id'=>$location->id,
+            'users_id'=> $request['users_id'],
+            'typeofproperty'=>$request['typeofproperty'],
+            'rent_or_sell'=>$request['rent_or_sell'],
+            'address'=>$request['address'],
+            'numberofRooms'=>$request['numberofRooms'],
+            'descreption'=>$request['descreption'],
+            'nameState'=>$request['nameState'],
+            'image'=> $this->upload_image($request),
+         'video'=>$this->upload_video($request),
+            'price'=>$request['price'],
+            'monthlyRent'=>null,
+         'area'=>$request['area'],
+         'price_square_meter'=>$avgSell
+
+            ]);
 
 
-        } else {
-            $property1 = property_special_model::where('typeofproperty', 'like', '%' . $name . '%')->get();
+    }
 
-            if (!$property1->isEmpty()) {
-                foreach ($property1 as $pro) {
+}
+else{
+    if( $request['rent_or_sell']=="rent"){
 
-                    $locationId = $pro->location_id;
-                    $stateId = location_model::find($locationId)->state_id;
-                    $state = state_model::find($stateId)->nameState;
-                    $location = location_model::find($locationId)->address;
-                    $iduser = $pro->users_id;
-                    $nameuser = User::find($iduser)->name;
+        $property=property_special_model::create([
+            'location_id'=>$location->id,
+            'users_id'=> $request['users_id'],
+            'typeofproperty'=>$request['typeofproperty'],
+            'rent_or_sell'=>$request['rent_or_sell'],
+            'address'=>$request['address'],
+            'numberofRooms'=>$request['numberofRooms'],
+            'descreption'=>$request['descreption'],
+            'nameState'=>$request['nameState'],
+            'image'=> null,
+            'video'=>null,
+            'monthlyRent'=>$request['monthlyRent'],
+            'price'=>null,
+           'area'=>$request['area'],
+           'rent_square_meter'=>$avgRent
 
-                    $h[] = array(
-                        "id property" => $pro->id,
-                        "name user" => $nameuser,
-                        "type property" => $pro->typeofproperty,
-                        "location property" => $location,
-                        "state" => $state,
-                        "hhhhh"
-
-                    );
-                }
-
-
-            } else {
-                $property2 = property_special_model::where('rent_or_sell', 'like', '%' . $name . '%')->get();
-
-                if (!$property2->isEmpty()) {
-                    foreach ($property2 as $pro) {
-
-                        $locationId = $pro->location_id;
-                        $stateId = location_model::find($locationId)->state_id;
-                        $state = state_model::find($stateId)->nameState;
-                        $location = location_model::find($locationId)->address;
-                        $iduser = $pro->users_id;
-                        $nameuser = User::find($iduser)->name;
-
-                        $h[] = array(
-                            "id property" => $pro->id,
-                            "name user" => $nameuser,
-                            "type property" => $pro->typeofproperty,
-                            "type offer" => $pro->rent_or_sell,
-                            "location property" => $location,
-                            "state" => $state,
-                            "ddddd"
-
-                        );
-                    }
-
-
-                } else return Response()->json(['  no  result ']);
-
-
-            }
-
-
+            ]);
         }
+        if( $request['rent_or_sell']=="sell"){
+    
+            $property=property_special_model::create([
+                'location_id'=>$location->id,
+                'users_id'=> $request['users_id'],
+                'typeofproperty'=>$request['typeofproperty'],
+                'rent_or_sell'=>$request['rent_or_sell'],
+                'address'=>$request['address'],
+                'numberofRooms'=>$request['numberofRooms'],
+                'descreption'=>$request['descreption'],
+                'nameState'=>$request['nameState'],
+                'image'=> null,
+                'video'=>null,
+                'price'=>$request['price'],
+                'monthlyRent'=>null,
+             'area'=>$request['area'],
+         'price_square_meter'=>$avgSell
 
-        return Response()->json(['result' => $h]);
+
+                ]);
+    
+    
+        }
+}
+       
+     return Response()->json(['state'=>$state,'location'=>$location,'property'=>$property]);
+
+
 
 
     }
 
 
+
+
+
+
+     
+    public function showSlider()
+    {
+
+ $propertyRent=DB::table('property_special')->
+ where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+
+ $propertyprice=DB::table('property_special')->
+ where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+
+
+
+    if(!$propertyprice->isEmpty() && !$propertyRent->isEmpty()){
+
+return Response()->json(['property sell '=>$propertyprice,'property rent'=>$propertyRent]);
+
+ }
+
+ if(!$propertyprice->isEmpty() && $propertyRent->isEmpty()){
+
+ return Response()->json(['property sell '=>$propertyprice]);
+                        
+ }
+     
+ if($propertyprice->isEmpty() && !$propertyRent->isEmpty()){
+
+return Response()->json(['property rent'=>$propertyRent]);
+                                                                                           
+ } 
+
+  if($propertyprice->isEmpty() && $propertyRent->isEmpty()){
+
+ return Response()->json('no property to show ');
+                                                                                                                                             
+  }
+        
+    }
+
+    public function getproperty( $id){
+
+$property=property_special_model::find($id);
+
+if($property){
+$idlocation=$property->location_id;
+
+$location=location_model::find($idlocation);
+$name=$location->address;
+$stateid=$location->state_id;
+$state=state_model::find($stateid);
+$namestate=$state->nameState;
+
+return Response()->json(['locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+}
+else return Response()->json([null]);
+
+
+    }
+    public function property(){
+$property=DB::table('property_special')->inRandomOrder()->get();
+if(!$property->isEmpty()){
+foreach($property as $pro){
+$locationid=$pro->location_id;
+$location=location_model::find($locationid);
+$stateid=$location->state_id;
+$state=state_model::find($stateid);
+
+$h[]=array(
+"property"=>$pro,
+"location"=>$location,
+"state"=>$state
+
+);
+
+}
+return Response()->json($h);
+}
+else return null;
+
+    }
+
+
+    public function public_search(Request $request){
+
+        $name=$request['name'];
+        $users=User::where('name','like','%'. $name.'%')->get();
+       if(!$users->isEmpty()){
+        foreach($users as $user){
+
+            $id=$user->id;
+            $nameuser=$user->name;
+            $property=property_special_model::where('users_id','=',$id)->get();
+                if(!$property->isEmpty()){
+    
+                    foreach($property as $pro){
+                        $locationId=$pro->location_id;
+                        $stateId=location_model::find($locationId)->state_id;
+                        $state=state_model::find($stateId)->nameState;
+                        $location=location_model::find($locationId)->address;
+                    
+                        $h[]=array(
+                    "id"=>$id,        
+                    "name user"=>$nameuser,
+                    "image"=>$user->image,
+                    "location property"=>$location,
+                    "state"=>$state,
+                    "hello"
+                   
+
+        
+                        );
+        
+                    }
+                }
+                else{
+                    $h[]=array("name user"=>$nameuser,
+                    "id"=>$id,
+                    "image"=>$user->image,
+                    "location property"=>null,
+                    "state"=>null,
+                    "welcom"
+                
+                );
+                   
+                }
+
+              
+    
+       }
+
+
+
+        }
+        else{
+            $property1=property_special_model::where('typeofproperty','like','%'. $name.'%')->get();
+
+            if(!$property1->isEmpty()){
+                foreach($property1 as $pro){
+    
+                $locationId=$pro->location_id;
+                $stateId=location_model::find($locationId)->state_id;
+                $state=state_model::find($stateId)->nameState;
+                $location=location_model::find($locationId)->address;
+                $iduser=$pro->users_id;
+                $nameuser=User::find($iduser)->name;
+                    
+                $h[]=array(
+                    "id property"=>$pro->id,        
+                    "name user"=>$nameuser,
+                    "type property"=>$pro->typeofproperty,
+                    "location property"=>$location,
+                    "state"=>$state,
+                    "hhhhh"
+                   
+                );
+                }
+    
+    
+            }
+            else {
+                $property2=property_special_model::where('rent_or_sell','like','%'. $name.'%')->get();
+
+                if(!$property2->isEmpty()){
+                    foreach($property2 as $pro){
+        
+                    $locationId=$pro->location_id;
+                    $stateId=location_model::find($locationId)->state_id;
+                    $state=state_model::find($stateId)->nameState;
+                    $location=location_model::find($locationId)->address;
+                    $iduser=$pro->users_id;
+                    $nameuser=User::find($iduser)->name;
+                        
+                    $h[]=array(
+                        "id property"=>$pro->id,        
+                        "name user"=>$nameuser,
+                        "type property"=>$pro->typeofproperty,
+                        "type offer"=>$pro->rent_or_sell,
+                        "location property"=>$location,
+                        "state"=>$state,
+                        "ddddd"
+                       
+                    );
+                    }
+        
+        
+                }
+                else return Response()->json(['  no  result ']);
+
+
+            }
+            
+
+        }
+    
+        return Response()->json(['result'=>$h]);    
+        
+        
+
+    }
+    
+
+
+
+
+
+
+    
+
     /**
      * Show the form for editing the specified resource.
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -392,8 +609,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
 
@@ -401,14 +618,13 @@ return Response()->json(['massage' => 'logged out successfully  ']);
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)
     {
         //
     }
-<<<<<<< HEAD
 
     public function upload_image(Request $request){
         $images=array();
@@ -418,12 +634,11 @@ return Response()->json(['massage' => 'logged out successfully  ']);
        
                    foreach($files  as  $image){
                         $filename=$image->getClientOriginalName();
-                        $filenameExtention=$image->getClientOriginalExtension();
-                        $filename=pathinfo($filename,PATHINFO_FILENAME);
-                        $filenameWithExt= $filename .'-' . time() .'.' . $filenameExtention;
-                        $path=$image->storeAs('image',$filenameWithExt,'public');
-                        $url=URL::asset($path);
-                       
+                        $filenameExtention= time(). '.' .$image->getClientOriginalExtension();
+                        $image->move('public/Image/',$filenameExtention);
+                        $url=url('public/Image/',$filenameExtention);
+
+                
 
                       array_push($images,$url);
           
@@ -446,13 +661,9 @@ return Response()->json(['massage' => 'logged out successfully  ']);
 
       if ($request['video']){
         $filename=$video->getClientOriginalName();
-        $filenameExtention=$video->getClientOriginalExtension();
-        $filename=pathinfo($filename,PATHINFO_FILENAME);
-        $filenameWithExt= $filename .'-' . time() .'.' . $filenameExtention;
-        $path=$video->storeAs('video',$filenameWithExt,'public');
-        $url=URL::asset($path);
-
-      
+        $filenameExtention= time(). '.' .$video->getClientOriginalExtension();
+        $video->move('public/video/',$filenameExtention);
+        $url=url('public/video/',$filenameExtention);
       
       return $url;
       }
@@ -466,21 +677,26 @@ public function redirect_google(){
 }
 public function handleCallback(){
 
-try{
-$user=Socialite::driver('google')->user();
-$finduser=User::where('google_id',$user->id)->first();
+// try{
 
-if($finduser){
+$user=Socialite::driver('google')->user();
+$finduser=User::where('google_id','=',$user->id)->first();
+
+if($finduser==true){    
 
 Auth::login($finduser);
-return  Response()->json($finduser);
+
+$token=$user->token;
+$refreshToken=$user->refreshToken;
+return  Response()->json(['user login'=>$finduser,'token'=>$token,'refreshToken'=>$refreshToken]);
 
 }
+
 else{
     $newuser=User::create([
         'name'=>$user->name,
         'email'=>$user->email,
-        'google_id'=>$user->google_id,
+        'google_id'=>$user->id,
         'age'=>$user->age,
         'gender'=>$user->gender,
         'information_about'=>$user->information_about,
@@ -489,19 +705,19 @@ else{
         
     ]);
     Auth::login($newuser);
-    return response()->json($newuser);
-}
-
-
-}
-catch(Exception $e){
-    dd($e->getMessage());
-}
+    $token=$newuser->token;
+$refreshToken=$newuser->refreshToken;
+return  Response()->json(['user register'=>$newuser,'token'=>$token,'refreshToken'=>$refreshToken]);
 
 }
 
 
-=======
->>>>>>> cbea51d77dd93b2ea43f19bb8713da481c2b248d
+// }
+// catch(Exception  $e){
+    // dd($e->getMessage());
+// }
+
 }
 
+
+}

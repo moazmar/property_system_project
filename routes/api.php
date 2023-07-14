@@ -3,9 +3,6 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\usercontroller;
-use App\Http\Controllers\PropertyController;
-
-
 
 /*
 |--------------------------------------------------------------------------
@@ -26,18 +23,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::post('rigester',[usercontroller::class,'Rigester']);
 Route::post('login',[usercontroller::class,'login']);
 Route::middleware(['auth:sanctum'])->group(function (){
-Route::post('add_property',[PropertyController::class,'add_property']);
+Route::post('add_property',[usercontroller::class,'add_property']);
 Route::post('updateuser',[usercontroller::class,'update']);
 Route::post('logout',[usercontroller::class,'logout']);
-Route::get('profile_me',[usercontroller::class,'profile_me']);
-Route::get('profile_user/{id}',[usercontroller::class,'profile_user']);
-Route::post('filter',[propertycontroller::class,'filters']);
-
 });
-Route::get('slider',[PropertyController::class,'showSlider']);
-Route::get('getproperty/{id}',[PropertyController::class,'getproperty']);
-Route::get('getproperty',[PropertyController::class,'property']);
-
+Route::get('slider',[usercontroller::class,'showSlider']);
+Route::get('getproperty/{id}',[usercontroller::class,'getproperty']);
+Route::get('getproperty',[usercontroller::class,'property']);
+Route::get('profile/{id}',[usercontroller::class,'profile']);
 Route::post('public_search',[usercontroller::class,'public_search']);
 
 Route::get('auth/google',[usercontroller::class,'redirect_google']);
