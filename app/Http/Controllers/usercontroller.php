@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\location_model;
 use App\Models\property_special_model;
 use App\Models\state_model;
+use App\Models\favorate_model;
+
 use Illuminate\Http\Request;
 use App\Models\User;
 use Laravel\Passport\HasApiTokens;
@@ -595,15 +597,6 @@ else return null;
         
 
     }
-    
-
-
-
-
-
-
-    
-
     /**
      * Show the form for editing the specified resource.
      *
@@ -727,6 +720,27 @@ return  Response()->json(['user register'=>$newuser,'token'=>$token,'refreshToke
 // }
 
 }
+public function addToFavorate(Request $request, $id){
+    $userid=auth()->user()->id;
+    $user=User::find($userid)->first();
 
+    if( !$user->isEmpty){
+    $username=$user->name;
+    $userImage=$user->image;
+    $property=property_special_model::find($id);
+    $propertyimage=$property->image;
+    $propertyOwnerID=$property->users_id;
+    $propertyOwnerName=$user=User::find($propertyOwnerID)->name;
+    $propertyOwnerImage=$user=User::find($propertyOwnerID)->image;
+
+        $favorate=favorate_model::create(['users_id'=>$userid,'property_special_id'=>$id]);
+
+return response()->json(['favorate'=>$favorate,'username'=>$username
+,'user Image'=>$userImage,
+'owner name'=>$propertyOwnerName,'owner image'=> $propertyOwnerImage]);
+    }
+    else return response()->json([null]);
+
+}
 
 }
