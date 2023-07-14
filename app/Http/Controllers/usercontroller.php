@@ -432,14 +432,17 @@ $property=property_special_model::find($id);
 
 if($property){
 $idlocation=$property->location_id;
-
+$userid=$property->users_id;
+$user=User::find($userid);
+$nameuser=$user->name;
+$userimage=$user->image;
 $location=location_model::find($idlocation);
 $name=$location->address;
 $stateid=$location->state_id;
 $state=state_model::find($stateid);
 $namestate=$state->nameState;
 
-return Response()->json(['locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
 }
 else return Response()->json([null]);
 
@@ -449,12 +452,18 @@ else return Response()->json([null]);
 $property=DB::table('property_special')->inRandomOrder()->get();
 if(!$property->isEmpty()){
 foreach($property as $pro){
+    $userid=$pro->users_id;
+$user=User::find($userid);
+$nameuser=$user->name;
+$userimage=$user->image;
 $locationid=$pro->location_id;
 $location=location_model::find($locationid);
 $stateid=$location->state_id;
 $state=state_model::find($stateid);
 
 $h[]=array(
+"owner name"=>$nameuser,
+"owner image"=>$userimage,    
 "property"=>$pro,
 "location"=>$location,
 "state"=>$state
