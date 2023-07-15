@@ -10,7 +10,7 @@ class rate_property_model extends Model
     protected $table='rate_property';
     protected $fillable=[
 'users_id',
-'property_special_id',
+'userUseRate',
 'rate'
 
 

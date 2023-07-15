@@ -27,6 +27,8 @@ Route::post('add_property',[usercontroller::class,'add_property']);
 Route::post('updateuser',[usercontroller::class,'update']);
 Route::post('logout',[usercontroller::class,'logout']);
 Route::post('favorate/{id}',[usercontroller::class,'addToFavorate']);
+Route::post('addRent',[usercontroller::class,'addRent']);
+
 });
 Route::get('slider',[usercontroller::class,'showSlider']);
 Route::get('getproperty/{id}',[usercontroller::class,'getproperty']);

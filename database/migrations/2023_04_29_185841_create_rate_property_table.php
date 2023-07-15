@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('rate_property', function (Blueprint $table) {
             $table->id();
+            $table->integer('userUseRate');
             $table->foreignId('users_id')->constrained('users');
-            $table->foreignId('property_special_id')->constrained('property_special');
             $table->float('rate');
             $table->rememberToken();
             $table->timestamps();

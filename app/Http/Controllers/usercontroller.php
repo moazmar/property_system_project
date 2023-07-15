@@ -6,6 +6,7 @@ use App\Models\location_model;
 use App\Models\property_special_model;
 use App\Models\state_model;
 use App\Models\favorate_model;
+use App\Models\rate_property_model;
 
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -394,10 +395,10 @@ else{
     public function showSlider()
     {
 
- $propertyRent=DB::table('property_special')->
+ $propertyRent=property_special_model::
  where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
- $propertyprice=DB::table('property_special')->
+ $propertyprice=property_special_model::
  where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
 
@@ -435,6 +436,11 @@ $property=property_special_model::find($id);
 if($property){
 $idlocation=$property->location_id;
 $userid=$property->users_id;
+$rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+$countRate=rate_property_model::where('users_id','=',$userid)->count();
+if($countRate==0){
+    $rate=0;
+    
 $user=User::find($userid);
 $nameuser=$user->name;
 $userimage=$user->image;
@@ -444,17 +450,36 @@ $stateid=$location->state_id;
 $state=state_model::find($stateid);
 $namestate=$state->nameState;
 
-return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+
+}
+$rate=$rateSum/$countRate;
+$user=User::find($userid);
+$nameuser=$user->name;
+$userimage=$user->image;
+$location=location_model::find($idlocation);
+$name=$location->address;
+$stateid=$location->state_id;
+$state=state_model::find($stateid);
+$namestate=$state->nameState;
+
+return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
 }
 else return Response()->json([null]);
 
 
     }
     public function property(){
-$property=DB::table('property_special')->inRandomOrder()->get();
+$property=property_special_model::inRandomOrder()->get();
 if(!$property->isEmpty()){
 foreach($property as $pro){
     $userid=$pro->users_id;
+    $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+    $countRate=rate_property_model::where('users_id','=',$userid)->count();
+ if($countRate==0){
+    $rate=0;
+ } else
+ $rate=$rateSum/$countRate; 
 $user=User::find($userid);
 $nameuser=$user->name;
 $userimage=$user->image;
@@ -465,7 +490,8 @@ $state=state_model::find($stateid);
 
 $h[]=array(
 "owner name"=>$nameuser,
-"owner image"=>$userimage,    
+"owner image"=>$userimage,
+"rate"=>$rate,    
 "property"=>$pro,
 "location"=>$location,
 "state"=>$state
@@ -720,7 +746,7 @@ return  Response()->json(['user register'=>$newuser,'token'=>$token,'refreshToke
 // }
 
 }
-public function addToFavorate(Request $request, $id){
+public function addToFavorate($id){
     $userid=auth()->user()->id;
     $user=User::find($userid)->first();
 
@@ -730,6 +756,20 @@ public function addToFavorate(Request $request, $id){
     $property=property_special_model::find($id);
     $propertyimage=$property->image;
     $propertyOwnerID=$property->users_id;
+    $rateSum=rate_property_model::where('users_id','=',$propertyOwnerID)->sum('rate');
+    $countRate=rate_property_model::where('users_id','=',$propertyOwnerID)->count();
+    if($countRate==0){
+        $rate=0;
+        $propertyOwnerName=$user=User::find($propertyOwnerID)->name;
+        $propertyOwnerImage=$user=User::find($propertyOwnerID)->image;
+    
+            $favorate=favorate_model::create(['users_id'=>$userid,'property_special_id'=>$id]);
+    
+    return response()->json(['favorate'=>$favorate,'username'=>$username
+    ,'user Image'=>$userImage,
+    'owner name'=>$propertyOwnerName,'owner image'=> $propertyOwnerImage,'rate'=>$rate]);
+    }
+    $rate=$rateSum/$countRate;
     $propertyOwnerName=$user=User::find($propertyOwnerID)->name;
     $propertyOwnerImage=$user=User::find($propertyOwnerID)->image;
 
@@ -737,9 +777,43 @@ public function addToFavorate(Request $request, $id){
 
 return response()->json(['favorate'=>$favorate,'username'=>$username
 ,'user Image'=>$userImage,
-'owner name'=>$propertyOwnerName,'owner image'=> $propertyOwnerImage]);
+'owner name'=>$propertyOwnerName,'owner image'=> $propertyOwnerImage,'rate'=>$rate]);
     }
     else return response()->json([null]);
+
+}
+
+public function addRent(Request $request){
+$id=$request['id_owner'];
+$rateValue=$request['rateValue'];
+
+
+$validate=Validator::make( $request->all(),[
+    'id_owner'=>'required',
+    'rateValue'=>'required|integer|min:1|max:5'
+    
+]);
+if($validate->fails()){
+
+    return response()->json($validate->errors());
+}
+
+    $userId=auth()->user()->id;
+    $user=User::find($userId)->first();
+    if( !$user->isEmpty){
+        $username=$user->name;
+        $userImage=$user->image;
+        $owner=User::find($id)->name;
+
+        $rate=rate_property_model::create([
+            'users_id'=>$id,
+            'userUseRate'=>$userId,
+            'rate'=>$rateValue
+
+        ]);
+        return response()->json(['rate'=>$rate,'user who use rate'=>$username,'owner is rated'=>$owner]);
+    }
+    else return response()->json(null);
 
 }
 
