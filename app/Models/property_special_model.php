@@ -11,28 +11,24 @@ use App\Models\selles_model;
 
 class property_special_model extends Model
 {
-    protected $table='property_special';
-    protected $guarded = ['id',];
-//    protected $fillable=[
-//'location_id',
-//'users_id',
-//'typeofproperty',
-//'rent_or_sell',
-//'address',
-//'numberofRooms',
-//'image',
-//'video',
-//'descreption',
-//'price',
-//'monthlyRent',
-//'area',
-//'price_square_meter',
-//'rent_square_meter',
-//
-//
-//
-//
-//    ];
+  protected $table='property_special';
+  protected $fillable=[
+'location_id',
+'users_id',
+'typeofproperty',
+'rent_or_sell',
+'address',
+'numberofRooms',
+'image',
+'video',
+'descreption',
+'price',
+'monthlyRent',
+'area',
+'price_square_meter',
+'rent_square_meter',
+
+   ];
 
     protected $casts = [
         'image' => 'array',

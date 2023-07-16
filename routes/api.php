@@ -28,6 +28,7 @@ Route::post('updateuser',[usercontroller::class,'update']);
 Route::post('logout',[usercontroller::class,'logout']);
 Route::post('favorate/{id}',[usercontroller::class,'addToFavorate']);
 Route::post('addRent',[usercontroller::class,'addRent']);
+Route::post('profile_me',[usercontroller::class,'profile_me']);
 
 });
 Route::get('slider',[usercontroller::class,'showSlider']);
