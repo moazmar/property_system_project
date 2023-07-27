@@ -19,4 +19,4 @@ Route::get('/', function () {
 
 });
 Route::get('auth/google',[usercontroller::class,'redirect_google']);
-Route::get('auth/google/callback',[usercontroller::class,'handleCallback']);
+Route::any('auth/google/callback',[usercontroller::class,'handleCallback']);

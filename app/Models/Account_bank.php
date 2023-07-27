@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
-class Account_bank extends Model
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class Account_bank extends Authenticatable
 {
     
     protected $table='bank_account';
@@ -18,5 +18,6 @@ class Account_bank extends Model
 
 
     ];
+    
     use HasFactory;
 }

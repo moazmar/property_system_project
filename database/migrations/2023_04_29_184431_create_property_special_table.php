@@ -19,9 +19,11 @@ return new class extends Migration
             $table->foreignId('users_id')->constrained('users');
             $table->string('typeofproperty');
             $table->string('rent_or_sell');
+            $table->string('wasSell_or_wasRented')->nullable();
             $table->string('address');
             $table->float('area');
             $table->integer('numberofRooms')->nullable();
+            $table->integer('bathRoom')->nullable();
             $table->string('image')->nullable();
             $table->string('video')->nullable();
             $table->string('descreption');
@@ -29,8 +31,7 @@ return new class extends Migration
             $table->float('monthlyRent')->nullable();
             $table->float('price_square_meter')->nullable();
             $table->float('rent_square_meter')->nullable();
-
-
+            
             $table->rememberToken();
 
             $table->timestamps();

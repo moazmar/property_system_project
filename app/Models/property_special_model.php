@@ -21,12 +21,14 @@ class property_special_model extends Model
 'numberofRooms',
 'image',
 'video',
+'wasSell_or_wasRented',
 'descreption',
 'price',
 'monthlyRent',
 'area',
 'price_square_meter',
 'rent_square_meter',
+'bathRoom'
 
    ];
 

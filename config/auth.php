@@ -40,6 +40,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'account'=>[
+            'driver'=>'session',
+            'provider'=>'bank_account',
+        ]
     ],
 
     /*
@@ -63,6 +67,10 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => App\Models\User::class,
+        ],
+        'bank_account'=>[
+            'driver' => 'eloquent',
+            'model' => App\Models\Account_bank::class,
         ],
 
         // 'users' => [

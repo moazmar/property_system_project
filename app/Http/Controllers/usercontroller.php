@@ -33,6 +33,7 @@ use Illuminate\Validation\Rules\Unique;
 use PhpParser\Node\Stmt\ElseIf_;
 use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
 
 class usercontroller extends Controller
 {
@@ -234,258 +235,6 @@ return Response()->json(['massage' => 'logged out successfully  ']);
      */
 
 
-     public function add_property(Request $request){
-        $validation=Validator::make($request->all(),[
-
-            // 'location_id'=>'required',
-            'typeofproperty'=>'required',
-            'rent_or_sell'=>'required',
-            //  'users_id'=>'required',
-            'address'=>'required',
-            'numberofRooms'=>'required',
-            // 'image'=>'required',
-            // 'video'=>'required',
-            // 'monthlyRent'=>'required',
-            // 'price'=>'required',
-            'descreption'=>'required',
-            'nameState'=>'required',
-            'area'=>'required'
-            
-        ]);
-        if($validation->fails()){
-
-
-    return Response()->json(['error'=>$validation->errors()]);
-
-}
-$namestate=$request['nameState'];
-$address=$request['address'];
-$state=state_model::where('nameState','=',$namestate)->first();
-$stateId=$state->id;
-$location1=location_model::where('state_id','=',$stateId)->where('address','=',$address)->first();
-
-    if($location1 ){
-    $locationId=$location1->id;
-        
-$request['users_id']=auth()->user()->id;
-$avgSell=$request['price']/$request['area'];
-$avgRent=$request['monthlyRent']/$request['area'];
-
-if( $request['rent_or_sell']=="rent"){
-
-    $property=property_special_model::create([
-        'location_id'=>$locationId,
-        'users_id'=> $request['users_id'],
-        'typeofproperty'=>$request['typeofproperty'],
-        'rent_or_sell'=>$request['rent_or_sell'],
-        'address'=>$request['address'],
-        'numberofRooms'=>$request['numberofRooms'],
-        'descreption'=>$request['descreption'],
-        'nameState'=>$request['nameState'],
-        'area'=>$request['area'],
-        'image'=> $this->upload_image($request),
-        'video'=>$this->upload_video($request),
-        'monthlyRent'=>$request['monthlyRent'],
-        'price'=>null,
-        'rent_square_meter'=>$avgRent
-        ]);
-    }
-    if( $request['rent_or_sell']=="sell"){
-
-        $property=property_special_model::create([
-            'location_id'=>$locationId,
-            'users_id'=> $request['users_id'],
-            'typeofproperty'=>$request['typeofproperty'],
-            'rent_or_sell'=>$request['rent_or_sell'],
-            'address'=>$request['address'],
-            'numberofRooms'=>$request['numberofRooms'],
-            'descreption'=>$request['descreption'],
-            'nameState'=>$request['nameState'],
-            'image'=> $this->upload_image($request),
-         'video'=>$this->upload_video($request),
-            'price'=>$request['price'],
-            'monthlyRent'=>null,
-         'area'=>$request['area'],
-         'price_square_meter'=>$avgSell
-
-            ]);
-    }
-    return Response()->json(['state'=>$state,'location'=>$location1,'property'=>$property]);
-
-
-}
-else{
-$location=location_model::create([
-
-    'address'=>$address,
-    'state_id'=>$stateId
-    ]);
-
-        $request['users_id']=auth()->user()->id;
-    $avgSell=$request['price']/$request['area'];
-    $avgRent=$request['monthlyRent']/$request['area'];
-
-    if( $request['rent_or_sell']=="rent"){
-
-    $property=property_special_model::create([
-        'location_id'=>$location->id,
-        'users_id'=> $request['users_id'],
-        'typeofproperty'=>$request['typeofproperty'],
-        'rent_or_sell'=>$request['rent_or_sell'],
-        'address'=>$request['address'],
-        'numberofRooms'=>$request['numberofRooms'],
-        'descreption'=>$request['descreption'],
-        'nameState'=>$request['nameState'],
-        'area'=>$request['area'],
-        'image'=> $this->upload_image($request),
-        'video'=>$this->upload_video($request),
-        'monthlyRent'=>$request['monthlyRent'],
-        'price'=>null,
-        'rent_square_meter'=>$avgRent
-        ]);
-    }
-    if( $request['rent_or_sell']=="sell"){
-
-        $property=property_special_model::create([
-            'location_id'=>$location->id,
-            'users_id'=> $request['users_id'],
-            'typeofproperty'=>$request['typeofproperty'],
-            'rent_or_sell'=>$request['rent_or_sell'],
-            'address'=>$request['address'],
-            'numberofRooms'=>$request['numberofRooms'],
-            'descreption'=>$request['descreption'],
-            'nameState'=>$request['nameState'],
-            'image'=> $this->upload_image($request),
-         'video'=>$this->upload_video($request),
-            'price'=>$request['price'],
-            'monthlyRent'=>null,
-         'area'=>$request['area'],
-         'price_square_meter'=>$avgSell
-
-            ]);
-
-}
-    return Response()->json(['state'=>$state,'location'=>$location,'property'=>$property]);
-
-     }
-     
-    }
-
-
-    public function showSlider()
-    {
-
- $propertyRent=property_special_model::
- where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
-
- $propertyprice=property_special_model::
- where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
-
-
-
-    if(!$propertyprice->isEmpty() && !$propertyRent->isEmpty()){
-
-return Response()->json(['property sell '=>$propertyprice,'property rent'=>$propertyRent]);
-
- }
-
- if(!$propertyprice->isEmpty() && $propertyRent->isEmpty()){
-
- return Response()->json(['property sell '=>$propertyprice]);
-                        
- }
-     
- if($propertyprice->isEmpty() && !$propertyRent->isEmpty()){
-
-return Response()->json(['property rent'=>$propertyRent]);
-                                                                                           
- } 
-
-  if($propertyprice->isEmpty() && $propertyRent->isEmpty()){
-
- return Response()->json('no property to show ');
-                                                                                                                                             
-  }
-        
-    }
-
-    public function getproperty( $id){
-
-$property=property_special_model::find($id);
-
-if($property){
-$idlocation=$property->location_id;
-$userid=$property->users_id;
-$rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
-$countRate=rate_property_model::where('users_id','=',$userid)->count();
-if($countRate==0){
-    $rate=0;
-    
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$location=location_model::find($idlocation);
-$name=$location->address;
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-$namestate=$state->nameState;
-
-return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
-
-}
-$rate=$rateSum/$countRate;
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$location=location_model::find($idlocation);
-$name=$location->address;
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-$namestate=$state->nameState;
-
-return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
-}
-else return Response()->json([null]);
-
-
-    }
-    public function property(){
-$property=property_special_model::inRandomOrder()->get();
-if(!$property->isEmpty()){
-foreach($property as $pro){
-    $userid=$pro->users_id;
-    $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
-    $countRate=rate_property_model::where('users_id','=',$userid)->count();
- if($countRate==0){
-    $rate=0;
- } else
- $rate=$rateSum/$countRate; 
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$locationid=$pro->location_id;
-$location=location_model::find($locationid);
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-
-$h[]=array(
-"owner name"=>$nameuser,
-"owner image"=>$userimage,
-"rate"=>$rate,    
-"property"=>$pro,
-"location"=>$location,
-"state"=>$state
-
-);
-
-}
-return Response()->json($h);
-}
-else return null;
-
-    }
-
-
     public function public_search(Request $request){
 
         $name=$request['name'];
@@ -507,6 +256,7 @@ else return null;
                         $h[]=array(
                     "id"=>$id,        
                     "name user"=>$nameuser,
+                    "his property"=>$pro,
                     "image"=>$user->image,
                     "location property"=>$location,
                     "state"=>$state,
@@ -522,6 +272,8 @@ else return null;
                     $h[]=array("name user"=>$nameuser,
                     "id"=>$id,
                     "image"=>$user->image,
+                    "his property"=>null,
+
                     "location property"=>null,
                     "state"=>null,
                     "welcom"
@@ -553,6 +305,8 @@ else return null;
                 $h[]=array(
                     "id property"=>$pro->id,        
                     "name user"=>$nameuser,
+                    "his property"=>$pro,
+
                     "type property"=>$pro->typeofproperty,
                     "location property"=>$location,
                     "state"=>$state,
@@ -579,6 +333,8 @@ else return null;
                     $h[]=array(
                         "id property"=>$pro->id,        
                         "name user"=>$nameuser,
+                    "his property"=>$pro,
+
                         "type property"=>$pro->typeofproperty,
                         "type offer"=>$pro->rent_or_sell,
                         "location property"=>$location,
@@ -646,16 +402,71 @@ else return null;
                         $image->move('public/Image/',$filenameExtention);
                         $url=url('public/Image/',$filenameExtention);
 
-                
-
                       array_push($images,$url);
-          
             }
              return $images;
-        
         }  
         else return null;          
     }
+
+    // public function upload_image(Request $request)
+
+    // {
+
+    //     $images = array();
+
+    //     if ($request->hasAny("images")) {
+
+    //         $files = $request->get("images");
+
+    //         foreach ($files as $filee) {
+
+    //             $file = base64_decode($filee, true);
+
+    //             $extension = "jpg"; // Set the default extension to 'jpg' if the original extension cannot be determined
+
+    //             // Get the original file extension from the MIME type
+
+    //             $finfo = finfo_open();
+
+    //             $mime_type = finfo_buffer($finfo, $file, FILEINFO_MIME_TYPE);
+
+    //             finfo_close($finfo);
+
+    //             $mime_parts = explode('/', $mime_type);
+
+    //             if (count($mime_parts) == 2) {
+
+    //                 $extension = $mime_parts[1];
+
+    //             }
+
+    //             $filename = time() . rand(1, 50) . '.' . $extension;
+
+    //             $tempPath = tempnam(sys_get_temp_dir(), 'tmp'); // Create a temporary file to store the decoded image data
+
+    //             file_put_contents($tempPath, $file); // Write the decoded image data to the temporary file
+
+    //             $uploadedFile = new \Illuminate\Http\UploadedFile($tempPath, $filename, mime_content_type($tempPath), null, true); // Create a new instance of UploadedFile
+
+    //             $uploadedFile->move('public/Image/', $filename);
+
+    //             $url = url('public/Image/' . $filename);
+
+    //             array_push($images, $url);
+
+    //         }
+
+    //         return $images;
+
+    //     } else {
+
+    //         return null;
+
+    //     }
+
+    // }
+
 
     public function upload_video(Request $request){
 
@@ -694,8 +505,8 @@ if($finduser==true){
 
 Auth::login($finduser);
 
-$token=$user->token;
-$refreshToken=$user->refreshToken;
+$token=$finduser->createToken('authToken')->plainTextToken;
+$refreshToken=$finduser->refreshToken;
 return  Response()->json(['user login'=>$finduser,'token'=>$token,'refreshToken'=>$refreshToken]);
 
 }
@@ -713,7 +524,7 @@ else{
         
     ]);
     Auth::login($newuser);
-    $token=$newuser->token;
+    $token=$newuser->createToken('authToken')->plainTextToken;
 $refreshToken=$newuser->refreshToken;
 return  Response()->json(['user register'=>$newuser,'token'=>$token,'refreshToken'=>$refreshToken]);
 
@@ -762,6 +573,22 @@ return response()->json(['favorate'=>$favorate,'username'=>$username
     else return response()->json([null]);
 
 }
+public function show_favorate(Request $request){
+$userid=auth()->user()->id;
+$favorate=favorate_model::where('users_id','=',$userid)->get();
+return response()->json(['favorate property relate to user '=> $favorate]);
+
+}
+public function delete_favorate(Request $request){
+    $userid=auth()->user()->id;
+    $idproperty=$request['id_property'];
+    $favorate=favorate_model::where('property_special_id','=',$idproperty)->where('users_id','=',$userid)->first();
+    $favorate->delete();
+
+    return response()->json(['delete favorate successfully',$favorate]);
+
+}
+
 
 public function addRent(Request $request){
 $id=$request['id_owner'];
@@ -796,17 +623,95 @@ if($validate->fails()){
     else return response()->json(null);
 }
 
-public function add_bank(Request $request){
-$name=$request['name'];
-$address=$request['address'];
 
+public function filters(Request $request)
+{
+    $validation = Validator::make($request->all(), [
+
+        'typeofproperty' => 'required',
+        'rent_or_sell' => 'required',
+
+
+    ]);
+    if ($validation->fails()) {
+
+
+        return Response()->json(['error' => $validation->errors()]);
+
+    }
+
+    $query = property_special_model::query();
+    $query->where('rent_or_sell', $request->input('rent_or_sell'));
+
+    $query->where('typeofproperty', $request->input('typeofproperty'));
+
+    if ($request->has('state')) {
+        $query->whereHas('location.state', function ($query) use ($request) {
+            $query->where('namestate', $request->input('state'));
+        });
+    }
+
+
+    if ($request->has('location')) {
+        $query->whereHas('location', function ($query) use ($request) {
+            $query->where('address', $request->input('location'));
+        });
+    }
+
+
+    if ($request->has('area')) {
+        $min_area = $request->area - 10;
+        $max_area = $request->area + 10;
+        $query->whereBetween('area', [$min_area, $max_area]);
+    }
+
+    if ($request->has('num_of_rooms')) {
+
+        $minRoom=$request->num_of_rooms -1;
+        $maxRoom=$request->num_of_rooms +1;
+        $query->whereBetween('numberofRooms', [$minRoom,$maxRoom]);
+
+    }
+
+    if ($request->has('price')) {
+
+        $query->where('price', $request->input('price'));
+    }
+
+    if ($request->has('monthlyRent')) {
+        $query->where('monthlyRent', $request->input('monthlyRent'));
+    }
+
+    if ($request->has('bathRoom')) {
+        $minRoom=$request->bathRoom -1;
+        $maxRoom=$request->bathRoom +1;
+        $query->whereBetween('bathRoom', [$minRoom,$maxRoom]);
+
+    }
+
+
+    $properties = $query->orderBy('price', 'asc')->get();
+
+    $properties = $query->orderBy('monthlyRent', 'asc')->get();
+
+
+    $props=array();
+    foreach ($properties as $property)
+    {
+        $location_id=$property->location_id;
+        $location=location_model::find($location_id);
+        $state_id=$location->state_id;
+        $state=state_model::find($state_id);
+        $owner=User::find($property->users_id);
+        $nameOwner=$owner->name;
+        $imageOwner=$owner->image;
+        array_push($props,['property'=>$property,'location'=>$location,'state'=>$state,'name owner'=>$nameOwner,'image owner'=>$imageOwner]);
+    }
+
+
+    return Response()->json(['properties' => $props]);
 
 }
 
-
-
-public function create_bank_account(Request $request){
-
-}
 
 }
