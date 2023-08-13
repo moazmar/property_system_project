@@ -24,7 +24,7 @@ return new class extends Migration
             $table->float('area');
             $table->integer('numberofRooms')->nullable();
             $table->integer('bathRoom')->nullable();
-            $table->string('image')->nullable();
+            $table->string('image',length:2000)->nullable();
             $table->string('video')->nullable();
             $table->string('descreption');
             $table->float('price')->nullable();

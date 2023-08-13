@@ -187,10 +187,10 @@ $location=location_model::create([
     {
 
  $propertyRent=property_special_model::
- where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+ where('rent_or_sell','=','rent')->where('wasSell_or_wasRented','=',null)->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
  $propertyprice=property_special_model::
- where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+ where('rent_or_sell','=','sell')->where('wasSell_or_wasRented','=',null)->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
 
 
@@ -224,7 +224,7 @@ return Response()->json(['property rent'=>$propertyRent]);
 
 $property=property_special_model::find($id);
 
-if($property){
+if($property && $property->wasSell_or_wasRented==null){
 $idlocation=$property->location_id;
 $userid=$property->users_id;
 $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
@@ -261,39 +261,49 @@ else return Response()->json([null]);
 
     }
     public function property(){
+        // $h[]=array();
 $property=property_special_model::inRandomOrder()->get();
 if(!$property->isEmpty()){
 foreach($property as $pro){
-    $userid=$pro->users_id;
-    $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
-    $countRate=rate_property_model::where('users_id','=',$userid)->count();
- if($countRate==0){
-    $rate=0;
- } else
- $rate=$rateSum/$countRate; 
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$locationid=$pro->location_id;
-$location=location_model::find($locationid);
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
+    if($pro->wasSell_or_wasRented==null){
+        $userid=$pro->users_id;
+        $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+        $countRate=rate_property_model::where('users_id','=',$userid)->count();
+     if($countRate==0){
+        $rate=0;
+     } else
+     $rate=$rateSum/$countRate; 
+    $user=User::find($userid);
+    $nameuser=$user->name;
+    $userimage=$user->image;
+    $locationid=$pro->location_id;
+    $location=location_model::find($locationid);
+    $stateid=$location->state_id;
+    $state=state_model::find($stateid);
+    
+    $h[]=array(
+    "owner name"=>$nameuser,
+    "owner image"=>$userimage,
+    "rate"=>$rate,    
+    "property"=>$pro,
+    "location"=>$location,
+    "state"=>$state
+    
+    );
+    }
+    else{
+        // $h[]=null;
+        continue;
 
-$h[]=array(
-"owner name"=>$nameuser,
-"owner image"=>$userimage,
-"rate"=>$rate,    
-"property"=>$pro,
-"location"=>$location,
-"state"=>$state
-
-);
-
+    }
 }
+
+if( empty($h) ){
+    return response()->json(null);
+}else
 return Response()->json($h);
 }
 else return null;
-
     }
 
 
@@ -302,14 +312,12 @@ else return null;
         if($request['image']){
       
             $files=$request->file('image');
-       
                    foreach($files  as  $image){
                         $filename=$image->getClientOriginalName();
-                        $filenameExtention= time(). '.' .$image->getClientOriginalExtension();
+                        $filenameExtention= uniqid() . '.' .$image->getClientOriginalExtension();
                         $image->move('public/Image/',$filenameExtention);
                         $url=url('public/Image/',$filenameExtention);
-
-                      array_push($images,$url);
+                        array_push($images,$url);
             }
              return $images;
         }  

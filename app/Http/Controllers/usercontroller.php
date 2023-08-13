@@ -74,9 +74,13 @@ $h[]=array(
 );
 
     }
+ return Response()->json(['user'=>$user,'user property'=>$h]);
 
 }
+
+$h=null;
  return Response()->json(['user'=>$user,'user property'=>$h]);
+
 
     }
 
@@ -103,9 +107,12 @@ $h[]=array(
 
     }
 
-}
-
  return Response()->json(['user'=>$user,'user property'=>$h]);
+
+}
+$h=null;
+ return Response()->json(['user'=>$user,'user property'=>$h]);
+
 
  }
 
@@ -137,7 +144,7 @@ $update= User:: find(auth()->user()->id);
 
     ]);
     if ($data->fails()) {
-        return Response()->json(['error' => $data->errors()]);
+        return Response()->json($data->errors());
     }
 
 $user=User::create([
@@ -199,14 +206,11 @@ else
     return Response()->json(['message'=>'error value resend right value','token'=>null]);
 
 }
-
 $user=User::where('email',$request['email'])->first();
 $token=$user->createToken('authToken')->plainTextToken;
-
-
 return Response()->json(['user'=>$user,'token'=>$token]);
-
     }
+
 public function logout(Request $request){
 
 
@@ -397,8 +401,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
             $files=$request->file('image');
        
                    foreach($files  as  $image){
-                        $filename=$image->getClientOriginalName();
-                        $filenameExtention= time(). '.' .$image->getClientOriginalExtension();
+                        // $filename=$image->getClientOriginalName();
+                        $filenameExtention= uniqid() . '.' . $image->getClientOriginalExtension();
                         $image->move('public/Image/',$filenameExtention);
                         $url=url('public/Image/',$filenameExtention);
 
@@ -590,7 +594,7 @@ public function delete_favorate(Request $request){
 }
 
 
-public function addRent(Request $request){
+public function addRate(Request $request){
 $id=$request['id_owner'];
 $rateValue=$request['rateValue'];
 
@@ -660,8 +664,8 @@ public function filters(Request $request)
 
 
     if ($request->has('area')) {
-        $min_area = $request->area - 10;
-        $max_area = $request->area + 10;
+        $min_area = $request->input('minArea');
+        $max_area = $request->input('maxArea');
         $query->whereBetween('area', [$min_area, $max_area]);
     }
 
@@ -673,13 +677,17 @@ public function filters(Request $request)
 
     }
 
-    if ($request->has('price')) {
+    if ($request->has('minprice')) {
+        $minprice=$request->input('minprice');
+        $maxprice=$request->input('maxprice');
 
-        $query->where('price', $request->input('price'));
+        $query->whereBetween('price', [$minprice,$maxprice]);
     }
 
     if ($request->has('monthlyRent')) {
-        $query->where('monthlyRent', $request->input('monthlyRent'));
+        $min_monthly=$request->input('minRent');
+        $max_monthly=$request->input('maxRent');
+        $query->whereBetween('monthlyRent', [$min_monthly,$max_monthly]);
     }
 
     if ($request->has('bathRoom')) {

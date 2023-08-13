@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\adminController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\usercontroller;
@@ -23,27 +24,29 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 
-Route::post('rigester',[usercontroller::class,'Rigester']);
-Route::post('login',[usercontroller::class,'login']);
+
 Route::middleware(['auth:sanctum'])->group(function (){
 Route::post('add_property',[propertyController::class,'add_property']);
 Route::post('updateuser',[usercontroller::class,'update']);
 Route::post('logout',[usercontroller::class,'logout']);
 Route::post('favorate/{id}',[usercontroller::class,'addToFavorate']);
-Route::post('addRent',[usercontroller::class,'addRent']);
+Route::post('addRate',[usercontroller::class,'addRate']);
 Route::post('profile_me',[usercontroller::class,'profile_me']);
 Route::post('bank_account',[BankController::class,'create_bank_account']);
 Route::post('edit_property',[propertyController::class,'edit_property']);
 Route::post('delete_favorate',[usercontroller::class,'delete_favorate']);
-Route::post('show_favorate',[usercontroller::class,'show_favorate']);
+Route::get('show_favorate',[usercontroller::class,'show_favorate']);
 Route::get('show_my_account',[BankController::class,'show_my_account']);
 Route::post('recharge_my_account',[BankController::class,'recharge_my_account']);
 Route::post('buy_property',[BankController::class,'buy']);
 Route::post('rent_property',[BankController::class,'rent']);
-
-
-
+Route::post('inform',[adminController::class,'inform']);
 });
+
+Route::post('rigester',[usercontroller::class,'Rigester']);
+Route::post('rigester1',[adminController::class,'Rigester']);
+Route::post('login1',[adminController::class,'login']);
+Route::post('login',[usercontroller::class,'login']);
 Route::get('slider',[propertyController::class,'showSlider']);
 Route::get('getproperty/{id}',[propertyController::class,'getproperty']);
 Route::get('getproperty',[propertyController::class,'property']);
