@@ -118,10 +118,20 @@ $h=null;
 
 
 
-    public function update( ){
+    public function update( Request $request ){
 $update= User:: find(auth()->user()->id);
+
  $update->update(Request()->all());
 
+ if($request->hasFile('image')){
+
+$update->image=$this->upload_image($request);
+$update->save();
+ }
+ else{  
+    $update->update(Request()->all());
+    $update->save();
+ }
  return Response()->json(['useredit'=>$update]);
 
     }
@@ -579,12 +589,57 @@ return response()->json(['favorate'=>$favorate,'username'=>$username
 }
 public function show_favorate(Request $request){
 $userid=auth()->user()->id;
+$username=User::find($userid)->name;
+
 $favorate=favorate_model::where('users_id','=',$userid)->get();
-return response()->json(['favorate property relate to user '=> $favorate]);
+if(!$favorate->isEmpty()){
+    foreach($favorate as $f){
+    
+        $property_id=$f->property_special_id;
+        $property=property_special_model::where('id','=',$property_id)->first();
+        if($property){
+            $locationId=$property->location_id;
+            $stateId=location_model::find($locationId)->state_id;
+            $state=state_model::find($stateId)->nameState;
+            $location=location_model::find($locationId)->address;
+            $iduser=$property->users_id;
+            $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
+            $countRate=rate_property_model::where('users_id','=',$iduser)->count();
+            if($countRate==0){
+                $rate=0;
+            }
+            else
+            $rate=$rateSum/$countRate;
+            $nameuser=User::find($iduser)->name;
+            
+            $h[]=array(
+            "my_username"=>$username,
+            "property"=>$property,
+            "owner"=>$nameuser,
+            "rate"=>$rate,
+            "location property"=>$location,
+            "state"=>$state,
+    
+            
+            
+            );
+        }
+        else{
+            continue;
+        }
+
+
+}
+if( empty($h) ){
+    return response()->json(null);}
+    else
+return response()->json(['favorate property relate to user '=> $h]);
+}
+return response()->json(['you dont have any favorate']);
 
 }
 public function delete_favorate(Request $request){
-    $userid=auth()->user()->id;
+    $userid=auth()->user()->id; 
     $idproperty=$request['id_property'];
     $favorate=favorate_model::where('property_special_id','=',$idproperty)->where('users_id','=',$userid)->first();
     $favorate->delete();

@@ -117,8 +117,10 @@ return response()->json(['bank account'=>$bankAccount]);
 public function show_my_account(){
     $userid=auth()->user()->id;
     $account=Account_bank::where('users_id','=',$userid)->get();
+    if(!$account->isEmpty())
     return Response()->json([$account]);
-    
+
+    return Response()->json(["dont have any account"]);
 }
 
 public function recharge_my_account( Request $request )

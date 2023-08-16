@@ -407,9 +407,36 @@ else return null;
 public function edit_property(Request $request){
     $userid=auth()->user()->id;
     $property=property_special_model::where('users_id','=',$userid)->where('id','=',$request['id'])->first();
-    $property->update(Request()->all());
+    if($property){
+        $property->update(Request()->all());
+if($request->hasFile('image')){
+    $property->image=$this->upload_image($request);
+        // $property->update(Request()->all());
     $property->save();
     return response()->json(['property edit'=> $property]);
+    }
+    else{
+        $property->update(Request()->all());
+        $property->save();
+        return response()->json(['property edit'=> $property]);
+    }
+
+}
+    return response()->json(['dont have any property to edit']);
+    
+}
+public function delete_property(Request $request){
+
+    $userid=auth()->user()->id;
+    $idproperty=$request['id_property'];
+    $property=property_special_model::where('id','=',$idproperty)->where('users_id','=',$userid)->first();
+    if($property){
+        $property->delete();
+    return response()->json(['delete property successfully',$property]);
+
+    }
+    return response()->json(['dont have any property']);
+
 }
 
 }

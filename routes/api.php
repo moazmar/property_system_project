@@ -41,6 +41,8 @@ Route::post('recharge_my_account',[BankController::class,'recharge_my_account'])
 Route::post('buy_property',[BankController::class,'buy']);
 Route::post('rent_property',[BankController::class,'rent']);
 Route::post('inform',[adminController::class,'inform']);
+Route::post('delete_property',[propertyController::class,'delete_property']);
+
 });
 
 Route::post('rigester',[usercontroller::class,'Rigester']);
