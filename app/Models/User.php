@@ -33,6 +33,9 @@ class User extends Authenticatable
         'gender',
         'information_about',
         'google_id',
+        'verification_code',
+        'suspended_at',
+        'suspension_duration',
 
 
     ];
@@ -54,10 +57,26 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
-
-            'image' => 'array'
-
+        'suspended_at' => 'datetime',
+           
     ];
+
+
+
+    public function isSuspended()
+    {
+        $suspendedAt = $this->suspended_at;
+        $suspensionDuration = $this->suspension_duration;
+
+        if ($suspendedAt && $suspensionDuration) {
+            $suspensionEndTime = $suspendedAt->addMinutes($suspensionDuration);
+
+            return $suspensionEndTime->isFuture();
+        }
+
+        return false;
+    }
+   
     public function properties()
     {
         return $this->hasMany(property_special_model::class);

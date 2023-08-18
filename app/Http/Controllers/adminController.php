@@ -11,7 +11,7 @@ use App\Models\Bank_model;
 use App\Models\Account_bank;
 use App\Models\Admin_model;
 use App\Models\inform_model;
-
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Laravel\Passport\HasApiTokens;
@@ -109,6 +109,18 @@ return Response()->json(['admin'=>$admin,'token'=>$token]);
  return Response()->json(['admin'=>$admin,'token'=>$token]);
      }
      
+     public function logout_admin(Request $request){
+        $accessToken = $request->bearerToken();
+            
+        // Get access token from database
+        $token = PersonalAccessToken::findToken($accessToken);
+        
+        // Revoke token
+        $token->delete();
+        return Response()->json(['massage' => 'logged out successfully  ']);
+        
+        }
+
      public function inform(Request $request){
         $type_of_informing=$request['type_informing'];
         $iduser=auth()->user()->id;
@@ -165,4 +177,36 @@ return Response()->json(['admin'=>$admin,'token'=>$token]);
         else return null;          
     }
 
+
+    public function suspend(Request $request)
+    {
+        $id=$request['id'];
+        $duration=$request['duration'];
+        $user = User::findOrFail($id);
+        
+        // Set the suspension details
+        $user->suspended_at = Carbon::now();
+        $user->suspension_duration = $duration;
+        $user->save();
+    
+        // Handle any additional suspension actions (e.g., logging out the user)
+    
+        return response()->json(['user suspend  successfully']);
+    }
+
+    public function unsuspend(Request $request)
+    {
+        $id=$request['id'];
+        $user = User::findOrFail($id);
+    
+        // Remove the suspension details
+        $user->suspended_at = null;
+        $user->suspension_duration = null;
+        $user->save();
+    
+        // Handle any additional unsuspension actions
+    
+        return response()->json(['user unsuspend  successfully']);
+        
+    }
 }

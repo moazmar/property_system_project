@@ -26,6 +26,8 @@ return new class extends Migration
             $table->string('information_about')->nullable();
             $table->string('google_id')->nullable();
             $table->rememberToken();
+            $table->timestamp('suspended_at')->nullable();
+            $table->integer('suspension_duration')->nullable();
             $table->timestamps();
         });
     }

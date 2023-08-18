@@ -29,6 +29,8 @@ Route::middleware(['auth:sanctum'])->group(function (){
 Route::post('add_property',[propertyController::class,'add_property']);
 Route::post('updateuser',[usercontroller::class,'update']);
 Route::post('logout',[usercontroller::class,'logout']);
+Route::post('logout_admin',[adminController::class,'logout_admin']);
+
 Route::post('favorate/{id}',[usercontroller::class,'addToFavorate']);
 Route::post('addRate',[usercontroller::class,'addRate']);
 Route::post('profile_me',[usercontroller::class,'profile_me']);
@@ -44,6 +46,8 @@ Route::post('inform',[adminController::class,'inform']);
 Route::post('delete_property',[propertyController::class,'delete_property']);
 
 });
+Route::post('suspend',[adminController::class,'suspend']);
+Route::post('unsuspend',[adminController::class,'unsuspend']);
 
 Route::post('rigester',[usercontroller::class,'Rigester']);
 Route::post('rigester1',[adminController::class,'Rigester']);
@@ -61,3 +65,6 @@ Route::get('all_user',[usercontroller::class,'index']);
 Route::get('auth/google',[usercontroller::class,'redirect_google']);
 
 Route::any('auth/google/callback',[usercontroller::class,'handleCallback']);
+
+Route::post('forget',[usercontroller::class,'forget']);
+// Route::post('reset',[usercontroller::class,'reset']);

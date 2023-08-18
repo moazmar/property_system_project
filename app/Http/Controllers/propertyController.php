@@ -62,6 +62,11 @@ class propertyController extends Controller
     return Response()->json(['error'=>$validation->errors()]);
 
 }
+$user=User::find(auth()->user()->id);
+if($user->isSuspended()){
+    return response()->json(['user suspend']);
+}
+
 $namestate=$request['nameState'];
 $address=$request['address'];
 $state=state_model::where('nameState','=',$namestate)->first();
@@ -222,49 +227,49 @@ return Response()->json(['property rent'=>$propertyRent]);
 
     public function getproperty( $id){
 
-$property=property_special_model::find($id);
+ $property=property_special_model::find($id);
 
-if($property && $property->wasSell_or_wasRented==null){
-$idlocation=$property->location_id;
-$userid=$property->users_id;
-$rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
-$countRate=rate_property_model::where('users_id','=',$userid)->count();
-if($countRate==0){
+ if($property && $property->wasSell_or_wasRented==null){
+ $idlocation=$property->location_id;
+ $userid=$property->users_id;
+ $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+ $countRate=rate_property_model::where('users_id','=',$userid)->count();
+ if($countRate==0){
     $rate=0;
     
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$location=location_model::find($idlocation);
-$name=$location->address;
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-$namestate=$state->nameState;
+ $user=User::find($userid);
+ $nameuser=$user->name;
+ $userimage=$user->image;
+ $location=location_model::find($idlocation);
+ $name=$location->address;
+ $stateid=$location->state_id;
+ $state=state_model::find($stateid);
+ $namestate=$state->nameState;
 
-return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+ return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
 
-}
-$rate=$rateSum/$countRate;
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$location=location_model::find($idlocation);
-$name=$location->address;
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-$namestate=$state->nameState;
+ }
+ $rate=$rateSum/$countRate;
+ $user=User::find($userid);
+ $nameuser=$user->name;
+ $userimage=$user->image;
+ $location=location_model::find($idlocation);
+ $name=$location->address;
+ $stateid=$location->state_id;
+ $state=state_model::find($stateid);
+ $namestate=$state->nameState;
 
-return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
-}
-else return Response()->json([null]);
+ return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
+ }
+ else return Response()->json([null]);
 
 
     }
     public function property(){
         // $h[]=array();
-$property=property_special_model::inRandomOrder()->get();
-if(!$property->isEmpty()){
-foreach($property as $pro){
+ $property=property_special_model::inRandomOrder()->get();
+ if(!$property->isEmpty()){
+ foreach($property as $pro){
     if($pro->wasSell_or_wasRented==null){
         $userid=$pro->users_id;
         $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
