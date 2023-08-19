@@ -219,7 +219,7 @@ return Response()->json(['property rent'=>$propertyRent]);
 
   if($propertyprice->isEmpty() && $propertyRent->isEmpty()){
 
- return Response()->json('no property to show ');
+ return Response()->json(['result'=>null]);
                                                                                                                                              
   }
         
@@ -249,7 +249,8 @@ return Response()->json(['property rent'=>$propertyRent]);
  return Response()->json(['owner name'=>$nameuser,'owner images'=>$userimage,'rate'=>$rate,'locationName'=>$name,'namestate'=>$namestate,'property'=> $property]);
 
  }
- $rate=$rateSum/$countRate;
+ $rate = floatval($rateSum) / floatval($countRate);  
+ 
  $user=User::find($userid);
  $nameuser=$user->name;
  $userimage=$user->image;
@@ -275,9 +276,9 @@ return Response()->json(['property rent'=>$propertyRent]);
         $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
         $countRate=rate_property_model::where('users_id','=',$userid)->count();
      if($countRate==0){
-        $rate=0;
+        $rate=0.0;
      } else
-     $rate=$rateSum/$countRate; 
+    $rate = floatval($rateSum) / floatval($countRate);  
     $user=User::find($userid);
     $nameuser=$user->name;
     $userimage=$user->image;
@@ -289,7 +290,7 @@ return Response()->json(['property rent'=>$propertyRent]);
     $h[]=array(
     "owner name"=>$nameuser,
     "owner image"=>$userimage,
-    "rate"=>$rate,    
+    "rate"=>sprintf("%.1f", $rate),      
     "property"=>$pro,
     "location"=>$location,
     "state"=>$state

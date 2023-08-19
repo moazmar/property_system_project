@@ -108,11 +108,18 @@ if(!$property->isEmpty()){
         $location=location_model::find($locationid);
         $stateid=$location->state_id;
         $state=state_model::find($stateid);
+        $rateSum=rate_property_model::where('users_id','=',$userId)->sum('rate');
+        $countRate=rate_property_model::where('users_id','=',$userId)->count();
+     if($countRate==0){
+        $rate=0.0;
+     } else
+    $rate = floatval($rateSum) / floatval($countRate); 
 
 $h[]=array(
 "property"=>$pro,
 "location"=>$location,
-"state"=>$state
+"state"=>$state,
+"myRate" => sprintf("%.1f", $rate),
 
 );
 
@@ -272,9 +279,10 @@ return Response()->json(['massage' => 'logged out successfully  ']);
             $rateSum=rate_property_model::where('users_id','=',$id)->sum('rate');
             $countRate=rate_property_model::where('users_id','=',$id)->count();
             if($countRate==0){
-            $rate=0;
+            $rate=0.0;
             } else
-            $rate=$rateSum/$countRate; 
+            $rate = floatval($rateSum) / floatval($countRate);  
+            
 
             $nameuser=$user->name;
 
@@ -297,7 +305,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                     "image"=>$user->image,
                     "location property"=>$location,
                     "state"=>$state,
-                    "rate"=>$rate,
+                    'rate'=>sprintf("%.1f", $rate),
+                    
                     "hello"
                    
 
@@ -315,7 +324,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                 else{
                     $h[]=array("name user"=>$nameuser,
                     "id"=>$id,
-                    "rate"=>$rate,
+                    'rate'=>sprintf("%.1f", $rate),
+                    
                     "image"=>$user->image,
                     "his property"=>null,
 
@@ -349,9 +359,10 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                 $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
                 $countRate=rate_property_model::where('users_id','=',$iduser)->count();
                 if($countRate==0){
-                $rate=0;
+                $rate=0.0;
                 } else
-                $rate=$rateSum/$countRate; 
+                $rate = floatval($rateSum) / floatval($countRate);   
+                 
     
                 $nameuser=User::find($iduser)->name;
                     
@@ -359,7 +370,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                     "id property"=>$pro->id,        
                     "name user"=>$nameuser,
                     "his property"=>$pro,
-                    "rate"=>$rate,
+                    'rate'=>sprintf("%.1f", $rate),      
+                    
                     "type property"=>$pro->typeofproperty,
                     "location property"=>$location,
                     "state"=>$state,
@@ -393,9 +405,10 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                         $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
                         $countRate=rate_property_model::where('users_id','=',$iduser)->count();
                         if($countRate==0){
-                        $rate=0;
+                        $rate=0.0;
                         } else
-                        $rate=$rateSum/$countRate; 
+                $rate = floatval($rateSum) / floatval($countRate);   
+                        
             
                         $nameuser=User::find($iduser)->name;
                             
@@ -403,7 +416,8 @@ return Response()->json(['massage' => 'logged out successfully  ']);
                             "id property"=>$pro->id,        
                             "name user"=>$nameuser,
                         "his property"=>$pro,
-                            "rate"=>$rate,
+                    'rate'=>sprintf("%.1f", $rate),      
+                            
                             "type property"=>$pro->typeofproperty,
                             "type offer"=>$pro->rent_or_sell,
                             "location property"=>$location,
@@ -422,9 +436,10 @@ return Response()->json(['massage' => 'logged out successfully  ']);
         
                 }
                 if( empty($h) ){
-                    return response()->json(null);
+                    return response()->json(['result'=>null]);
                 }
-                else return Response()->json(['  no  result ']);
+
+                // else return Response()->json(['no  result ']);
 
 
             }
@@ -670,17 +685,17 @@ if(!$favorate->isEmpty()){
             $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
             $countRate=rate_property_model::where('users_id','=',$iduser)->count();
             if($countRate==0){
-                $rate=0;
+                $rate=0.0;
             }
             else
-            $rate=$rateSum/$countRate;
+            $rate = floatval($rateSum) / floatval($countRate);
             $nameuser=User::find($iduser)->name;
             
             $h[]=array(
             "my_username"=>$username,
             "property"=>$property,
             "owner"=>$nameuser,
-            "rate"=>$rate,
+            "rate"=>sprintf("%.1f", $rate),
             "location property"=>$location,
             "state"=>$state,
     
@@ -697,9 +712,9 @@ if(!$favorate->isEmpty()){
 if( empty($h) ){
     return response()->json(null);}
     else
-return response()->json(['favorate property relate to user '=> $h]);
+return response()->json(['result'=> $h]);
 }
-return response()->json(['you dont have any favorate']);
+return response()->json(['result'=>null]);
 
 }
 public function delete_favorate(Request $request){
@@ -837,14 +852,15 @@ public function filters(Request $request)
         $rateSum=rate_property_model::where('users_id','=',$id)->sum('rate');
         $countRate=rate_property_model::where('users_id','=',$id)->count();
         if($countRate==0){
-            $rate=0;
+            $rate=0.0;
         }
         else 
-     $rate=$rateSum/$countRate; 
+        $rate = floatval($rateSum) / floatval($countRate);
+     
 
         $nameOwner=$owner->name;
         $imageOwner=$owner->image;
-        array_push($props,['property'=>$property,'location'=>$location,'state'=>$state,'name owner'=>$nameOwner,'image owner'=>$imageOwner,'rate'=>$rate]);
+        array_push($props,['property'=>$property,'location'=>$location,'state'=>$state,'name owner'=>$nameOwner,'image owner'=>$imageOwner,'rate' => sprintf("%.1f", $rate)]);
     }
     else{
         // $h[]=null;
