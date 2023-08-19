@@ -7,21 +7,32 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-class Account_bank extends Authenticatable
+class Admin_model extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
-
-    protected $guard = 'account';
-    protected $table='bank_account';
+    
+    protected $guard = 'Admin';
+    protected $table='admin';
     protected $fillable=[
-'users_id',
-'bank_id',
-'number_account',
-'value_of_account'
-
-
+'name',
+'email',
+'password',
+'phone',
+'image',
+'age',
+'gender',
+'information_about'
 
     ];
     
+
+    protected $casts = [
+            'image' => 'array'
+
+    ];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
     use HasFactory;
 }

@@ -187,44 +187,44 @@ $location=location_model::create([
     {
 
  $propertyRent=property_special_model::
- where('rent_or_sell','=','rent')->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+ where('rent_or_sell','=','rent')->where('wasSell_or_wasRented','=',null)->orderBy('rent_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
  $propertyprice=property_special_model::
- where('rent_or_sell','=','sell')->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
+ where('rent_or_sell','=','sell')->where('wasSell_or_wasRented','=',null)->orderBy('price_square_meter','asc')->orderBy('numberofRooms','desc')->get();
 
 
 
-    if(!$propertyprice->isEmpty() && !$propertyRent->isEmpty()){
+if(!$propertyprice->isEmpty() && !$propertyRent->isEmpty()){
 
-return Response()->json(['property sell '=>$propertyprice,'property rent'=>$propertyRent]);
+return Response()->json(['property sell'=>$propertyprice,'property rent'=>$propertyRent]);
 
  }
 
  if(!$propertyprice->isEmpty() && $propertyRent->isEmpty()){
 
- return Response()->json(['property sell '=>$propertyprice]);
+    return Response()->json(['property sell'=>$propertyprice]);
                         
  }
      
  if($propertyprice->isEmpty() && !$propertyRent->isEmpty()){
 
-return Response()->json(['property rent'=>$propertyRent]);
+    return Response()->json(['property rent'=>$propertyRent]);
                                                                                            
  } 
 
   if($propertyprice->isEmpty() && $propertyRent->isEmpty()){
 
- return Response()->json('no property to show ');
+    return Response()->json(['result'=>null]);
                                                                                                                                              
   }
         
     }
 
-    public function getproperty( $id){
+    public function getproperty($id){
 
 $property=property_special_model::find($id);
 
-if($property){
+if($property && $property->wasSell_or_wasRented==null){
 $idlocation=$property->location_id;
 $userid=$property->users_id;
 $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
@@ -264,57 +264,86 @@ else return Response()->json([null]);
 $property=property_special_model::inRandomOrder()->get();
 if(!$property->isEmpty()){
 foreach($property as $pro){
-    $userid=$pro->users_id;
-    $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
-    $countRate=rate_property_model::where('users_id','=',$userid)->count();
- if($countRate==0){
-    $rate=0;
- } else
- $rate=$rateSum/$countRate; 
-$user=User::find($userid);
-$nameuser=$user->name;
-$userimage=$user->image;
-$locationid=$pro->location_id;
-$location=location_model::find($locationid);
-$stateid=$location->state_id;
-$state=state_model::find($stateid);
-
-$h[]=array(
-"owner name"=>$nameuser,
-"owner image"=>$userimage,
-"rate"=>$rate,    
-"property"=>$pro,
-"location"=>$location,
-"state"=>$state
-
-);
-
+    if($pro->wasSell_or_wasRented==null){
+        $userid=$pro->users_id;
+        $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+        $countRate=rate_property_model::where('users_id','=',$userid)->count();
+     if($countRate==0){
+        $rate=0.0;
+     } else
+    $rate = floatval($rateSum) / floatval($countRate);  
+    $user=User::find($userid);
+    $nameuser=$user->name;
+    $userimage=$user->image;
+    $locationid=$pro->location_id;
+    $location=location_model::find($locationid);
+    $stateid=$location->state_id;
+    $state=state_model::find($stateid);
+    
+    $h[]=array(
+    "owner name"=>$nameuser,
+    'owner id'=>$user->id,
+    'owner phone'=>$user->phone,
+    "owner image"=>$userimage,
+    "rate"=>sprintf("%.1f", $rate),   
+    "property"=>$pro,
+    "location"=>$location,
+    "state"=>$state
+    
+    );
+    }
+    else{
+        // $h[]=null;
+        continue;
+    }
 }
-return Response()->json($h);
+
+if( empty($h) ){
+    return response()->json(['result'=>null]);
+}else
+return Response()->json(['result'=>$h]);
 }
 else return null;
-
     }
 
+    public function upload_image(Request $request)
+    {
 
-    public function upload_image(Request $request){
-        $images=array();
-        if($request['image']){
-      
-            $files=$request->file('image');
-       
-                   foreach($files  as  $image){
-                        $filename=$image->getClientOriginalName();
-                        $filenameExtention= time(). '.' .$image->getClientOriginalExtension();
-                        $image->move('public/Image/',$filenameExtention);
-                        $url=url('public/Image/',$filenameExtention);
+        $images = array();
+        if ($request->hasFile("images")) {
+            $files = $request->file("images");
+            foreach ($files as $file) {
 
-                      array_push($images,$url);
+                $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+
+                $file->move('public/Image/', $filename);
+
+                $url = url('public/Image/' . $filename);
+                array_push($images, $url);
+
             }
-             return $images;
-        }  
-        else return null;          
+            return $images;
+
+        } else return null;
     }
+
+
+    // public function upload_image(Request $request){
+    //     $images=array();
+    //     if($request['image']){
+      
+    //         $files=$request->file('image');
+    //                foreach($files  as  $image){
+    //                     $filename=$image->getClientOriginalName();
+    //                     $filenameExtention= uniqid() . '.' .$image->getClientOriginalExtension();
+    //                     $image->move('public/Image/',$filenameExtention);
+    //                     $url=url('public/Image/',$filenameExtention);
+    //                     array_push($images,$url);
+    //         }
+    //          return $images;
+    //     }  
+    //     else return null;          
+    // }
 
 
     // public function upload_image(Request $request)

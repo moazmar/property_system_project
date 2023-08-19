@@ -43,9 +43,9 @@ class BankController extends Controller
     
 public function add_bank(Request $request){
     $data=Validator::make($request->all(),[
- 'name'=>'required',
-  'nameState'=>'required',
-  'address'=>'required'      
+    'name'=>'required',
+    'nameState'=>'required',
+    'address'=>'required'      
 
     ]);
     if($data->fails()){
@@ -114,12 +114,20 @@ $bankAccount=Account_bank::create([
 ]);
 return response()->json(['bank account'=>$bankAccount]);
 }
+// public function show_my_account(){
+//     $userid = auth()->user()->id;
+//     $account = Account_bank::where('users_id','=',$userid)->get();
+//     return Response()->json($account[0]);
+// }
 public function show_my_account(){
     $userid=auth()->user()->id;
     $account=Account_bank::where('users_id','=',$userid)->get();
-    return Response()->json([$account]);
-    
+    if(!$account->isEmpty())
+    return Response()->json(['result'=>$account[0]]);
+
+    return Response()->json(['result'=>null]);
 }
+
 
 public function recharge_my_account( Request $request )
 {
@@ -151,7 +159,7 @@ public function recharge_my_account( Request $request )
            $accountNew=Account_bank::find($account->id);
            $accountNew->value_of_account+=$valueCharge;
            $accountNew->save();
-        return Response()->json(['done successfuly','new account'=>$accountNew]);
+        return Response()->json(['message'=>'done successfuly','new account'=>$accountNew]);
 
 }
 
@@ -160,26 +168,25 @@ public function buy(Request $request){
 $userid=auth()->user()->id;
 $idproperty=$request['id_property'];
 $numberAccount=$request['number_account'];
-
 $bank_account1=Account_bank::where('users_id','=',$userid)->where('number_account','=',$numberAccount)->first();
 if($bank_account1){
 $value_of_account1=$bank_account1->value_of_account;
 }
 else{
-    return response()->json(['buyer dont have any bank account']);
+    return response()->json(['message'=>'buyer dont have any bank account']);
 }
 
 $property=property_special_model::find($idproperty);
 if($property->wasSell_or_wasRented=='wasSell'){
-    return response()->json(['message'=>'this property was seeled so you cant buy this']);
+    return response()->json(['message'=>'this property was sold so you can not buy it']);
 }
 if($property->rent_or_sell=='rent'){
-    return response()->json(['message'=>'this property is rent  so you cant sell this']);
+    return response()->json(['message'=>'this property is rent  so you can not sell it']);
 }
 $userid2=$property->users_id;
 $price=$property->price;
 if($value_of_account1 < $price){
-return response()->json(['you dont have in tour account enough money to buy this proprty']);
+return response()->json(['message'=>'You do not have enough balance in your bank account to buy this property']);
 }
 $bank_account2=Account_bank::where('users_id','=',$userid2)->first();
 if($bank_account2){
@@ -188,7 +195,7 @@ if($bank_account2){
 
 }
 else{
-    return response()->json(['seller dont have any bank account']);
+    return response()->json(['message'=>'seller dont have any bank account']);
 }
 
 
@@ -206,7 +213,7 @@ else{
  ]);
 
 
- return response()->json(['sell operation was done successfully',$sell]);
+ return response()->json(['message'=>'sell operation was done successfully',$sell]);
 }
 
 
@@ -221,7 +228,7 @@ if($bank_account1){
 $value_of_account1=$bank_account1->value_of_account;
 }
 else{
-    return response()->json(['buyer dont have any bank account']);
+    return response()->json(['message'=>'buyer dont have any bank account']);
 }
 
 $property=property_special_model::find($idproperty);
@@ -234,7 +241,7 @@ if($property->rent_or_sell=='sell'){
 $userid2=$property->users_id;
 $monthlyRent=$property->monthlyRent;
 if($value_of_account1 < $monthlyRent){
-return response()->json(['you dont have in your account enough money to  rent this proprty']);
+return response()->json(['message'=>'You do not have enough balance in your bank account to rent this property']);
 }
 $bank_account2=Account_bank::where('users_id','=',$userid2)->first();
 if($bank_account2){
@@ -243,7 +250,7 @@ if($bank_account2){
 
 }
 else{
-    return response()->json(['renter dont have any bank account']);
+    return response()->json(['message'=>'renter dont have any bank account']);
 }
 
 
@@ -261,7 +268,7 @@ else{
  ]);
 
 
- return response()->json(['rent operation was done successfully',$rent]);
+ return response()->json(['message'=>'rent operation was done successfully',$rent]);
 }
 
 

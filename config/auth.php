@@ -43,6 +43,11 @@ return [
         'account'=>[
             'driver'=>'session',
             'provider'=>'bank_account',
+        ],
+
+        'Admin'=>[
+            'driver'=>'session',
+            'provider'=>'admin',
         ]
     ],
 
@@ -72,6 +77,10 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Account_bank::class,
         ],
+        'admin'=>[
+            'driver'=>'eloquent',
+            'model'=>App\Models\Admin_model::class,
+        ]
 
         // 'users' => [
         //     'driver' => 'database',

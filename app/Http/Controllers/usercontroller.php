@@ -74,9 +74,13 @@ $h[]=array(
 );
 
     }
+ return Response()->json(['user'=>$user,'user property'=>$h]);
 
 }
+
+$h=null;
  return Response()->json(['user'=>$user,'user property'=>$h]);
+
 
     }
 
@@ -88,36 +92,50 @@ $h[]=array(
 
 if(!$property->isEmpty()){
     foreach($property as $pro){
-
         $locationid=$pro->location_id;
         $location=location_model::find($locationid);
         $stateid=$location->state_id;
         $state=state_model::find($stateid);
+        $rateSum=rate_property_model::where('users_id','=',$userId)->sum('rate');
+        $countRate=rate_property_model::where('users_id','=',$userId)->count();
+     if($countRate==0){
+        $rate=0.0;
+     } else
+    $rate = floatval($rateSum) / floatval($countRate); 
 
 $h[]=array(
+"myRate" => sprintf("%.1f", $rate),
 "property"=>$pro,
 "location"=>$location,
 "state"=>$state
 
 );
-
     }
-
-}
-
  return Response()->json(['user'=>$user,'user property'=>$h]);
 
+}
+$h=null;
+ return Response()->json(['user'=>$user,'user property'=>$h]);
  }
 
 
-
-    public function update( ){
-$update= User:: find(auth()->user()->id);
- $update->update(Request()->all());
-
- return Response()->json(['useredit'=>$update]);
-
-    }
+public function update( Request $request ){
+    $update= User:: find(auth()->user()->id);
+    
+     $update->update(Request()->all());
+    
+     if($request->hasFile('image')){
+    
+    $update->image=$this->upload_image($request);
+    $update->save();
+     }
+     else{  
+        $update->update(Request()->all());
+        $update->save();
+     }
+     return Response()->json(['useredit'=>$update]);
+        }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -137,7 +155,7 @@ $update= User:: find(auth()->user()->id);
 
     ]);
     if ($data->fails()) {
-        return Response()->json(['error' => $data->errors()]);
+        return Response()->json($data->errors());
     }
 
 $user=User::create([
@@ -199,14 +217,11 @@ else
     return Response()->json(['message'=>'error value resend right value','token'=>null]);
 
 }
-
 $user=User::where('email',$request['email'])->first();
 $token=$user->createToken('authToken')->plainTextToken;
-
-
 return Response()->json(['user'=>$user,'token'=>$token]);
-
     }
+
 public function logout(Request $request){
 
 
@@ -241,119 +256,123 @@ return Response()->json(['massage' => 'logged out successfully  ']);
         $users=User::where('name','like','%'. $name.'%')->get();
        if(!$users->isEmpty()){
         foreach($users as $user){
-
             $id=$user->id;
-            $nameuser=$user->name;
             $property=property_special_model::where('users_id','=',$id)->get();
                 if(!$property->isEmpty()){
-    
                     foreach($property as $pro){
                         $locationId=$pro->location_id;
                         $stateId=location_model::find($locationId)->state_id;
                         $state=state_model::find($stateId)->nameState;
                         $location=location_model::find($locationId)->address;
-                    
-                        $h[]=array(
-                    "id"=>$id,        
-                    "name user"=>$nameuser,
-                    "his property"=>$pro,
-                    "image"=>$user->image,
-                    "location property"=>$location,
-                    "state"=>$state,
-                    "hello"
-                   
-
-        
-                        );
-        
+                        $userid=$pro->users_id;
+                        $user=User::find($userid);
+                        $rateSum=rate_property_model::where('users_id','=',$userid)->sum('rate');
+                    $countRate=rate_property_model::where('users_id','=',$userid)->count();
+                 if($countRate==0){
+                    $rate=0.0;
+                 } else
+                $rate = floatval($rateSum) / floatval($countRate);
+                    $h[]=array(
+                        'owner id'=>$user->id,
+                        'owner phone'=>$user->phone,            
+                        "owner image"=>$user->image,
+                        'rate'=>sprintf("%.1f", $rate),
+                        "id property"=>$pro->id,        
+                        "owner name"=>$user->name,
+                        "his property"=>$pro,
+                        "type property"=>$pro->typeofproperty,
+                        "type offer"=>$pro->rent_or_sell,
+                        "location property"=>$location,
+                        "state"=>$state,
+                        "ddddd"    
+                    );
                     }
                 }
                 else{
-                    $h[]=array("name user"=>$nameuser,
-                    "id"=>$id,
-                    "image"=>$user->image,
-                    "his property"=>null,
-
-                    "location property"=>null,
-                    "state"=>null,
-                    "welcom"
-                
-                );
-                   
-                }
-
-              
-    
-       }
-
-
-
-        }
-        else{
-            $property1=property_special_model::where('typeofproperty','like','%'. $name.'%')->get();
-
-            if(!$property1->isEmpty()){
-                foreach($property1 as $pro){
-    
-                $locationId=$pro->location_id;
-                $stateId=location_model::find($locationId)->state_id;
-                $state=state_model::find($stateId)->nameState;
-                $location=location_model::find($locationId)->address;
-                $iduser=$pro->users_id;
-                $nameuser=User::find($iduser)->name;
-                    
-                $h[]=array(
-                    "id property"=>$pro->id,        
-                    "name user"=>$nameuser,
-                    "his property"=>$pro,
-
-                    "type property"=>$pro->typeofproperty,
-                    "location property"=>$location,
-                    "state"=>$state,
-                    "hhhhh"
-                   
-                );
-                }
-    
-    
-            }
-            else {
-                $property2=property_special_model::where('rent_or_sell','like','%'. $name.'%')->get();
-
-                if(!$property2->isEmpty()){
-                    foreach($property2 as $pro){
-        
-                    $locationId=$pro->location_id;
-                    $stateId=location_model::find($locationId)->state_id;
-                    $state=state_model::find($stateId)->nameState;
-                    $location=location_model::find($locationId)->address;
-                    $iduser=$pro->users_id;
-                    $nameuser=User::find($iduser)->name;
-                        
                     $h[]=array(
-                        "id property"=>$pro->id,        
-                        "name user"=>$nameuser,
-                    "his property"=>$pro,
-
+                        'owner id'=>$user->id,
+                        'owner phone'=>$user->phone,            
+                        "owner image"=>$user->image,
+                        "id property"=>$pro->id,  
+                        'rate'=>sprintf("%.1f", $rate),      
+                        "owner name"=>$user->name,
+                        "his property"=>$pro,
                         "type property"=>$pro->typeofproperty,
                         "type offer"=>$pro->rent_or_sell,
                         "location property"=>$location,
                         "state"=>$state,
                         "ddddd"
-                       
+                    );
+                }
+       }
+        }
+        else{
+            $property1=property_special_model::where('typeofproperty','like','%'. $name.'%')->get();
+            if(!$property1->isEmpty()){
+                foreach($property1 as $pro){
+                $locationId=$pro->location_id;
+                $stateId=location_model::find($locationId)->state_id;
+                $state=state_model::find($stateId)->nameState;
+                $location=location_model::find($locationId)->address;
+                $iduser=$pro->users_id;
+                $user=User::find($iduser);
+                $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
+                    $countRate=rate_property_model::where('users_id','=',$iduser)->count();
+                 if($countRate==0){
+                    $rate=0.0;
+                 } else
+                $rate = floatval($rateSum) / floatval($countRate);   
+                    $h[]=array(
+                        'owner id'=>$user->id,
+                        'owner phone'=>$user->phone,            
+                        "owner image"=>$user->image,
+                        "id property"=>$pro->id,  
+                        'rate'=>sprintf("%.1f", $rate),      
+                        "owner name"=>$user->name,
+                        "his property"=>$pro,
+                        "type property"=>$pro->typeofproperty,
+                        "type offer"=>$pro->rent_or_sell,
+                        "location property"=>$location,
+                        "state"=>$state,
+                        "ddddd"  
+                    );
+                }
+            }
+            else {
+                $property2=property_special_model::where('rent_or_sell','like','%'. $name.'%')->get();
+                if(!$property2->isEmpty()){
+                    foreach($property2 as $pro){
+                    $locationId=$pro->location_id;
+                    $stateId=location_model::find($locationId)->state_id;
+                    $state=state_model::find($stateId)->nameState;
+                    $location=location_model::find($locationId)->address;
+                    $iduser=$pro->users_id;
+                    $user=User::find($iduser);
+                    $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
+                    $countRate=rate_property_model::where('users_id','=',$iduser)->count();
+                 if($countRate==0){
+                    $rate=0.0;
+                 } else
+                $rate = floatval($rateSum) / floatval($countRate);
+                    $h[]=array(
+                        'owner id'=>$user->id,
+                        'owner phone'=>$user->phone,            
+                        "owner image"=>$user->image,
+                        "id property"=>$pro->id,
+                        'rate'=>sprintf("%.1f", $rate),        
+                        "owner name"=>$user->name,
+                        "his property"=>$pro,
+                        "type property"=>$pro->typeofproperty,
+                        "type offer"=>$pro->rent_or_sell,
+                        "location property"=>$location,
+                        "state"=>$state,
+                        "ddddd"
                     );
                     }
-        
-        
                 }
-                else return Response()->json(['  no  result ']);
-
-
+                else return Response()->json(['result'=>null]);
             }
-            
-
         }
-    
         return Response()->json(['result'=>$h]);    
         
         
@@ -393,15 +412,12 @@ return Response()->json(['massage' => 'logged out successfully  ']);
     public function upload_image(Request $request){
         $images=array();
         if($request['image']){
-      
             $files=$request->file('image');
-       
                    foreach($files  as  $image){
-                        $filename=$image->getClientOriginalName();
-                        $filenameExtention= time(). '.' .$image->getClientOriginalExtension();
+                        // $filename=$image->getClientOriginalName();
+                        $filenameExtention= uniqid() . '.' . $image->getClientOriginalExtension();
                         $image->move('public/Image/',$filenameExtention);
                         $url=url('public/Image/',$filenameExtention);
-
                       array_push($images,$url);
             }
              return $images;
@@ -573,13 +589,67 @@ return response()->json(['favorate'=>$favorate,'username'=>$username
     else return response()->json([null]);
 
 }
-public function show_favorate(Request $request){
-$userid=auth()->user()->id;
-$favorate=favorate_model::where('users_id','=',$userid)->get();
-return response()->json(['favorate property relate to user '=> $favorate]);
+// public function show_favorate(Request $request){
+// $userid=auth()->user()->id;
+// $favorate=favorate_model::where('users_id','=',$userid)->get();
+// return response()->json(['favorate property relate to user '=> $favorate]);
+// }
 
-}
-public function delete_favorate(Request $request){
+public function show_favorate(Request $request){
+
+    $userid=auth()->user()->id;
+    $username=User::find($userid)->name;
+    
+    $favorate=favorate_model::where('users_id','=',$userid)->get();
+    if(!$favorate->isEmpty()){
+        foreach($favorate as $f){
+            $property_id=$f->property_special_id;
+            $property=property_special_model::where('id','=',$property_id)->first();
+            if($property){
+                $locationId=$property->location_id;
+                $stateId=location_model::find($locationId)->state_id;
+                $state=state_model::find($stateId)->nameState;
+                $location=location_model::find($locationId)->address;
+                $iduser=$property->users_id;
+                $rateSum=rate_property_model::where('users_id','=',$iduser)->sum('rate');
+                $countRate=rate_property_model::where('users_id','=',$iduser)->count();
+                if($countRate==0){
+                    $rate=0;
+                }
+                else
+                $rate=$rateSum/$countRate;
+                $user=User::find($iduser);
+                $nameuser = $user->name;
+                $userimage = $user->image;
+                $userphone = $user->phone;
+                $userid = $user->id; 
+                
+                $h[]=array(
+                "owner name"=>$nameuser,
+                'owner id'=>$userid,
+                'owner phone'=>$userphone,
+                "owner image"=>$userimage,
+                "rate"=>sprintf("%.1f", $rate),
+                "location property"=>$location,
+                "property"=>$property,
+                "state"=>$state,
+                );
+            }
+            else{
+                continue;
+            }
+    }
+    if( empty($h) ){
+        return response()->json(null);}
+        else
+    return response()->json(['result'=>$h]);
+    }
+    return response()->json(['result'=>null]); 
+    }
+
+
+
+    public function delete_favorate(Request $request){
     $userid=auth()->user()->id;
     $idproperty=$request['id_property'];
     $favorate=favorate_model::where('property_special_id','=',$idproperty)->where('users_id','=',$userid)->first();
@@ -590,7 +660,7 @@ public function delete_favorate(Request $request){
 }
 
 
-public function addRent(Request $request){
+public function addRate(Request $request){
 $id=$request['id_owner'];
 $rateValue=$request['rateValue'];
 
@@ -658,10 +728,9 @@ public function filters(Request $request)
         });
     }
 
-
-    if ($request->has('area')) {
-        $min_area = $request->area - 10;
-        $max_area = $request->area + 10;
+    if ($request->has('minarea')) {
+        $min_area = $request->input('minarea');
+        $max_area = $request->input('maxarea');
         $query->whereBetween('area', [$min_area, $max_area]);
     }
 
@@ -673,13 +742,23 @@ public function filters(Request $request)
 
     }
 
-    if ($request->has('price')) {
+    // if ($request->has('minprice')) {
+    //     $minprice=$request->input('minprice');
+    //     $maxprice=$request->input('maxprice');
 
-        $query->where('price', $request->input('price'));
-    }
+    //     $query->whereBetween('price', [$minprice,$maxprice]);
+    // }
+    if ($request->has('minprice'))
+    {
+   if($request->has('maxprice'))
+   { $query->whereBetween('price', [$request->input('minprice'),$request->input('maxprice')]);
+   }
+   }
 
-    if ($request->has('monthlyRent')) {
-        $query->where('monthlyRent', $request->input('monthlyRent'));
+    if ($request->has('minRent')) {
+        $min_monthly=$request->input('minRent');
+        $max_monthly=$request->input('maxRent');
+        $query->whereBetween('monthlyRent', [$min_monthly,$max_monthly]);
     }
 
     if ($request->has('bathRoom')) {
@@ -705,7 +784,26 @@ public function filters(Request $request)
         $owner=User::find($property->users_id);
         $nameOwner=$owner->name;
         $imageOwner=$owner->image;
-        array_push($props,['property'=>$property,'location'=>$location,'state'=>$state,'name owner'=>$nameOwner,'image owner'=>$imageOwner]);
+        $phoneOwner = $owner->phone ;
+        $idOwner = $owner->id ; 
+        $rateSum=rate_property_model::where('users_id','=',$idOwner)->sum('rate');
+        $countRate=rate_property_model::where('users_id','=',$idOwner)->count();
+        if($countRate==0){
+            $rate=0.0;
+        } else
+        $rate = floatval($rateSum) / floatval($countRate); 
+        array_push(
+            $props,
+            [
+                'owner name'=>$nameOwner,
+                'owner image'=>$imageOwner,
+                'owner phone' => $phoneOwner,
+                'owner id' => $idOwner,
+                'rate' => sprintf("%.1f", $rate),
+                'property'=>$property,
+                'location'=>$location,
+                'state'=>$state,
+            ]);
     }
 
 
